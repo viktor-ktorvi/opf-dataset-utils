@@ -1,0 +1,6 @@
+# This file is for custom makefile variable at the project level.
+# They are meant to be share by the whole project team.
+
+APPLICATION_NAME := opf_dataset_utils
+CONDA_ENVIRONMENT := opf-dataset-utils-env
+PYTHON_VERSION := 3.11

@@ -1,0 +1,28 @@
+# This file is meant for private variables and targets that apply only to each person's
+# local developments variables (ie. configurations specific to your own local
+# development environment) as well as sensitive information, like access keys,
+# passwords and such.
+#
+# Ex. personal targets while exploring new parameters or configurations that should not
+# be share with other project members
+#
+# Make a copy of this file and name it `Makefile.private`, then define your own
+# variables in it.
+#
+# `Makefile.private` is already ignored by the `.gitignore` file.
+#
+# DO NOT COMMIT YOUR `Makefile.private`!!!
+
+
+## Private variables
+
+# If you use a different Conda tool, say `micromamba`, or if you use a different alias
+# CONDA_TOOL := <YOU_CONDA_TOOL_IF_DIFFERENT_FROM_CONDA>
+DOCKER_COMPOSE := docker compose
+
+# Some targets use this variable. A 'false' value will ask user to confirm some steps.
+# a 'true' value will automatically install/remove without asking beforehand.
+AUTO_INSTALL := false
+
+## -- Private targets ------------------------------------------------------------------------------------------------##
+
