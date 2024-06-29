@@ -1,0 +1,11 @@
+batch_size: 1024
+
+case_names:
+  - pglib_opf_case14_ieee
+
+data_directory: data
+
+device: cuda
+
+branch_powers_error_threshold_pu: 1e-5
+power_flow_error_threshold_pu: 1e-4
