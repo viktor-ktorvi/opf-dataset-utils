@@ -42,8 +42,8 @@ def main():
 
     print(batch)
     print("Mean power flow errors:")
-    print(f"\tSolution: {calculate_power_flow_errors(batch, batch.y_dict).abs().mean():.5e}")
-    print(f"\tUntrained model prediction: {calculate_power_flow_errors(batch, predictions).abs().mean():.5f}")
+    print(f"\tSolution: {calculate_power_flow_errors(batch, batch.y_dict).abs().mean():.5e} [p.u.]")
+    print(f"\tUntrained model prediction: {calculate_power_flow_errors(batch, predictions).abs().mean():.5f} [p.u.]")
 
 
 if __name__ == "__main__":

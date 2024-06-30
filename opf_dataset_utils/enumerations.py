@@ -79,3 +79,10 @@ class EdgeTypes(str, Enum):
     GENERATOR_LINK = "generator_link"
     LOAD_LINK = "load_link"
     SHUNT_LINK = "shunt_link"
+
+
+class BusTypes(IntEnum):
+    PQ = 1
+    PV = 2
+    REFERENCE = 3
+    INACTIVE = 4
