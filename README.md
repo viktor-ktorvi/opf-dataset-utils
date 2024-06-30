@@ -6,9 +6,10 @@ In this package we provide utils to support working with the
 We implement:
 
 * Efficient OPF related calculations to be used as metrics or in a physics informed setting:
-    * Power Flow
-    * Costs
-    * Inequalities
+    * Power Flow errors
+    * Branch powers
+    * Costs (TODO)
+    * Inequalities (TODO)
 * Data visualization
 * Enums for indexing the OPFData JSON format
 * And more...
@@ -33,7 +34,10 @@ from opf_dataset_utils.plotting.draw import draw_graph
 draw_graph(dataset[0], ax=ax, node_size=300)
 ```
 
-![Example graph](img/draw_example.png)
+<p align="center">
+<img src="img/draw_example.png" alt="Example graph" width="600"/>
+</p>
+
 
 ### OPF calculations
 
