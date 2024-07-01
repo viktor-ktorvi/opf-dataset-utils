@@ -26,7 +26,7 @@ pip install git+https://github.com/viktor-ktorvi/opf-dataset-utils.git
 
 ### Plotting
 
-See [scripts/draw.py](scripts/power_flow_errors.py) for a full example.
+See [scripts/draw.py](scripts/draw.py) for a full example.
 
 ```python
 from opf_dataset_utils.plotting.draw import draw_graph

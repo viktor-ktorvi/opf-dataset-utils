@@ -14,15 +14,15 @@ from opf_dataset_utils.enumerations import (
 from opf_dataset_utils.physics.utils import extract_branch_admittances
 
 
-def calculate_branch_powers(data: HeteroData, targets: Dict, branch_type: str) -> Tuple[Tensor, Tensor]:
+def calculate_branch_powers(data: HeteroData, predictions: Dict, branch_type: str) -> Tuple[Tensor, Tensor]:
     """
     Calculate the branch powers of the given branch type in both the from and to directions.
     Parameters
     ----------
     data: HeteroData
         OPFData.
-    targets: Dict
-        Target dictionary. Must contain 'bus'.
+    predictions: Dict
+        Prediction dictionary. Must contain 'bus'.
     branch_type: str
         One of ['ac_line', 'transformer'].
 
@@ -37,12 +37,12 @@ def calculate_branch_powers(data: HeteroData, targets: Dict, branch_type: str) -
 
     edge_index = data.edge_index_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)]
 
-    Vm = targets[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
+    Vm = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
 
     Vm_i = Vm[edge_index[EdgeIndexIndices.FROM]]
     Vm_j = Vm[edge_index[EdgeIndexIndices.TO]]
 
-    Va = targets[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_ANGLE]
+    Va = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_ANGLE]
 
     V_i = Vm_i * torch.exp(1j * Va[edge_index[EdgeIndexIndices.FROM]])
     V_j = Vm_j * torch.exp(1j * Va[edge_index[EdgeIndexIndices.TO]])

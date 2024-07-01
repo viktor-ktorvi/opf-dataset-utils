@@ -17,15 +17,15 @@ from opf_dataset_utils.physics.power import calculate_branch_powers
 from opf_dataset_utils.physics.utils import aggregate_bus_level
 
 
-def calculate_power_flow_errors(data: HeteroData, targets: Dict) -> Tensor:
+def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate the power flow errors.
     Parameters
     ----------
     data: HeteroData
         OPFData.
-    targets: Dict
-        Target dictionary. Must contain 'bus' and 'generator'.
+    predictions: Dict
+        Prediction dictionary. Must contain 'bus' and 'generator'.
 
     Returns
     -------
@@ -36,8 +36,8 @@ def calculate_power_flow_errors(data: HeteroData, targets: Dict) -> Tensor:
 
     # generator, load and shunt power at the bus
     Sg = (
-        targets[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER]
-        + 1j * targets[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER]
+        predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER]
+        + 1j * predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER]
     )
     Sd = (
         data.x_dict[NodeTypes.LOAD][:, GridLoadIndices.ACTIVE_POWER]
@@ -66,12 +66,12 @@ def calculate_power_flow_errors(data: HeteroData, targets: Dict) -> Tensor:
         src=Ysh,
     )
 
-    Vm = targets[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
+    Vm = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
     Ssh_bus = torch.conj(Ysh_bus) * Vm**2
 
     # AC line and transformer branch powers going in(to) and out(from) of the bus
-    S_ac_from, S_ac_to = calculate_branch_powers(data, targets, EdgeTypes.AC_LINE)
-    S_t_from, S_t_to = calculate_branch_powers(data, targets, EdgeTypes.TRANSFORMER)
+    S_ac_from, S_ac_to = calculate_branch_powers(data, predictions, EdgeTypes.AC_LINE)
+    S_t_from, S_t_to = calculate_branch_powers(data, predictions, EdgeTypes.TRANSFORMER)
 
     ac_line_edge_index = data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS)]
     S_ac_from_bus = aggregate_bus_level(num_buses, index=ac_line_edge_index[EdgeIndexIndices.FROM], src=S_ac_from)
