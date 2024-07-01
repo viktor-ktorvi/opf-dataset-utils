@@ -63,6 +63,11 @@ Mean power flow errors:
 See [scripts/costs.py](scripts/costs.py) for a full example.
 
 ```python
+from opf_dataset_utils.costs import (
+    calculate_costs_per_generator,
+    calculate_costs_per_grid,
+)
+
 costs_per_grid = calculate_costs_per_grid(data, data.y_dict)
 costs_per_generator = calculate_costs_per_generator(data, data.y_dict)
 ```
