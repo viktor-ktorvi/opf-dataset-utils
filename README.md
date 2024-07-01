@@ -8,7 +8,7 @@ We implement:
 * Efficient OPF related calculations to be used as metrics or in a physics informed setting:
     * Power Flow errors
     * Branch powers
-    * Costs (TODO)
+    * Costs
     * Inequalities (TODO)
 * Data visualization
 * Enums for indexing the OPFData JSON format
@@ -38,7 +38,6 @@ draw_graph(dataset[0], ax=ax, node_size=300)
 <img src="img/draw_example.png" alt="Example graph" width="600"/>
 </p>
 
-
 ### OPF calculations
 
 #### Power flow errors
@@ -57,6 +56,15 @@ print(f"\tUntrained model prediction: {calculate_power_flow_errors(batch, predic
 Mean power flow errors:
 	Solution: 1.28563e-06 [p.u.]
 	Untrained model prediction: 413350.84375 [p.u.]
+```
+
+#### Costs
+
+See [scripts/costs.py](scripts/costs.py) for a full example.
+
+```python
+costs_per_grid = calculate_costs_per_grid(data, data.y_dict)
+costs_per_generator = calculate_costs_per_generator(data, data.y_dict)
 ```
 
 #### Branch power flows

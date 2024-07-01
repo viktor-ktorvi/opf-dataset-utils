@@ -1,5 +1,7 @@
 from enum import Enum, IntEnum
 
+# TODO sort alphabetically
+
 
 class SolutionBusIndices(IntEnum):
     VOLTAGE_ANGLE = 0
@@ -23,6 +25,20 @@ class SolutionTransformerIndices(IntEnum):
     REACTIVE_POWER_TO = 1
     ACTIVE_POWER_FROM = 2
     REACTIVE_POWER_FROM = 3
+
+
+class GridGeneratorIndices(IntEnum):
+    TOTAL_BASE_MVA = 0
+    ACTIVE_POWER = 1
+    ACTIVE_POWER_MIN = 2
+    ACTIVE_POWER_MAX = 3
+    REACTIVE_POWER = 4
+    REACTIVE_POWER_MIN = 5
+    REACTIVE_POWER_MAX = 6
+    INITIAL_VOLTAGE_MAGNITUDE = 7
+    COST_SQUARED = 8
+    COST_LINEAR = 9
+    COST_OFFSET = 10
 
 
 class GridLoadIndices(IntEnum):
