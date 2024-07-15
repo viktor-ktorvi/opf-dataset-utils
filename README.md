@@ -9,7 +9,7 @@ We implement:
     * Power Flow errors
     * Branch powers
     * Costs
-    * Inequalities (TODO)
+    * Inequalities
 * Data visualization
 * Enums for indexing the OPFData JSON format
 * And more...
