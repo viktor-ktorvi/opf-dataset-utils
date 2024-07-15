@@ -33,6 +33,13 @@ class GridACLineIndices(IntEnum):
     EMERGENCY_RATING = 8
 
 
+class GridBusIndices(IntEnum):
+    BASE_KV = 0
+    BUS_TYPE = 1
+    VOLTAGE_MIN = 2
+    VOLTAGE_MAX = 3
+
+
 class GridGeneratorIndices(IntEnum):
     TOTAL_BASE_MVA = 0
     ACTIVE_POWER = 1

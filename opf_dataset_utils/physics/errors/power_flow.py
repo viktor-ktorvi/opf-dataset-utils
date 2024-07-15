@@ -10,11 +10,11 @@ from opf_dataset_utils.enumerations import (
     GridLoadIndices,
     GridShuntIndices,
     NodeTypes,
-    SolutionBusIndices,
     SolutionGeneratorIndices,
 )
 from opf_dataset_utils.physics.power import calculate_branch_powers
 from opf_dataset_utils.physics.utils import aggregate_bus_level
+from opf_dataset_utils.physics.voltage import get_voltages_magnitudes
 
 
 def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
@@ -66,7 +66,7 @@ def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
         src=Ysh,
     )
 
-    Vm = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
+    Vm = get_voltages_magnitudes(predictions)
     Ssh_bus = torch.conj(Ysh_bus) * Vm**2
 
     # AC line and transformer branch powers going in(to) and out(from) of the bus

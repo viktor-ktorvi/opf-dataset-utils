@@ -7,5 +7,15 @@ data_directory: data
 
 device: cuda
 
-branch_powers_error_threshold_pu: 1e-5
-power_flow_error_threshold_pu: 1e-4
+# tolerances
+branch_powers_error_tolerance_pu: 1e-5
+
+power_flow_error_tolerance_pu: 1e-4
+
+voltage_magnitude_tolerance_pu: 1e-6
+
+voltage_angle_tolerance_rad: 1e-7
+
+generator_power_tolerance_pu: 1e-7
+
+
