@@ -2,9 +2,7 @@ from typing import List
 from unittest import TestCase
 
 import torch
-from hydra import compose, initialize
 from omegaconf import DictConfig
-from torch_geometric.datasets import OPFDataset
 from torch_geometric.loader import DataLoader
 
 from opf_dataset_utils.enumerations import (
@@ -15,6 +13,7 @@ from opf_dataset_utils.enumerations import (
 )
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
 from opf_dataset_utils.physics.power import calculate_branch_powers
+from tests.utils import setup_test
 
 
 class TestPowerFlow(TestCase):
@@ -30,26 +29,11 @@ class TestPowerFlow(TestCase):
         -------
 
         """
-        with initialize(version_base=None, config_path="../config"):
-            cls.cfg = compose(config_name="tests")
+        setup_test(cls)
 
-        cls.device = torch.device(cls.cfg.device if torch.cuda.is_available() else "cpu")
-
-        cls.loaders = []
-
-        for case_name in cls.cfg.case_names:
-            for topological_perturbations in [False, True]:
-                dataset = OPFDataset(
-                    cls.cfg.data_directory,
-                    case_name=case_name,
-                    split="val",
-                    topological_perturbations=topological_perturbations,
-                )
-                cls.loaders.append(DataLoader(dataset, batch_size=cls.cfg.batch_size, shuffle=True))
-
-    def test_absolute_errors_less_than_threshold(self):
+    def test_absolute_errors_less_than_tolerance(self):
         """
-        Check if the maximum module of the complex power flow errors [p.u.] is less than a threshold.
+        Check if the maximum module of the complex power flow errors [p.u.] is less than a tolerance.
         Returns
         -------
 
@@ -59,12 +43,12 @@ class TestPowerFlow(TestCase):
             for batch in loader:
                 self.assertLess(
                     calculate_power_flow_errors(batch, batch.y_dict).abs().max().item(),
-                    self.cfg.power_flow_error_threshold_pu,
+                    self.cfg.power_flow_error_tolerance_pu,
                 )
 
     def test_branch_flows_equal_solution(self):
         """
-        Check if the maximum module of the difference between the calculated and solution branch power flows [p.u.] is less than a threshold.
+        Check if the maximum module of the difference between the calculated and solution branch power flows [p.u.] is less than a tolerance.
         Returns
         -------
 
@@ -99,17 +83,17 @@ class TestPowerFlow(TestCase):
 
                 self.assertLess(
                     (ac_line_powers_from - ac_line_powers_solution_from).abs().max().item(),
-                    self.cfg.branch_powers_error_threshold_pu,
+                    self.cfg.branch_powers_error_tolerance_pu,
                 )
                 self.assertLess(
                     (ac_line_powers_to - ac_line_powers_solution_to).abs().max().item(),
-                    self.cfg.branch_powers_error_threshold_pu,
+                    self.cfg.branch_powers_error_tolerance_pu,
                 )
                 self.assertLess(
                     (transformer_powers_from - transformer_powers_solution_from).abs().max().item(),
-                    self.cfg.branch_powers_error_threshold_pu,
+                    self.cfg.branch_powers_error_tolerance_pu,
                 )
                 self.assertLess(
                     (transformer_powers_to - transformer_powers_solution_to).abs().max().item(),
-                    self.cfg.branch_powers_error_threshold_pu,
+                    self.cfg.branch_powers_error_tolerance_pu,
                 )

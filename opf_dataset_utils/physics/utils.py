@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Type, Union
 
 import torch
 from torch import LongTensor, Tensor
@@ -70,14 +70,7 @@ def extract_branch_admittances(data: HeteroData, branch_type: str) -> Tuple[Tens
     Yc_ji
         Charging admittance in the 'to' direction.
     """
-    if branch_type == EdgeTypes.AC_LINE:
-        indices = GridACLineIndices
-    elif branch_type == EdgeTypes.TRANSFORMER:
-        indices = GridTransformerIndices
-    else:
-        raise ValueError(
-            f"Branch type '{branch_type}' is not supported. Expected one of ['{EdgeTypes.AC_LINE}', '{EdgeTypes.TRANSFORMER}']"
-        )
+    indices = get_branch_type_indices(branch_type)
 
     Y_ij = calculate_admittances(
         data.edge_attr_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)][:, indices.SERIES_RESISTANCE],
@@ -88,3 +81,30 @@ def extract_branch_admittances(data: HeteroData, branch_type: str) -> Tuple[Tens
     Yc_ji = 1j * data.edge_attr_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)][:, indices.CHARGING_SUSCEPTANCE_TO]
 
     return Y_ij, Yc_ij, Yc_ji
+
+
+def get_branch_type_indices(branch_type: str) -> Union[Type[GridACLineIndices], Type[GridTransformerIndices]]:
+    """
+    Return the corresponding enum class for the given branch type.
+    Parameters
+    ----------
+    branch_type: str
+        One of ['ac_line', 'transformer'].
+
+    Returns
+    -------
+    branch_type_enum: Union[Type[GridACLineIndices], Type[GridTransformerIndices]]
+        Corresponding branch type enum class.
+    Raises
+    ------
+    ValueError:
+        If the branch type isn't supported.
+    """
+    if branch_type == EdgeTypes.AC_LINE:
+        return GridACLineIndices
+    elif branch_type == EdgeTypes.TRANSFORMER:
+        return GridTransformerIndices
+    else:
+        raise ValueError(
+            f"Branch type '{branch_type}' is not supported. Expected one of ['{EdgeTypes.AC_LINE}', '{EdgeTypes.TRANSFORMER}']"
+        )

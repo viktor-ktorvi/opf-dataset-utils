@@ -9,9 +9,12 @@ from opf_dataset_utils.enumerations import (
     EdgeTypes,
     GridTransformerIndices,
     NodeTypes,
-    SolutionBusIndices,
 )
 from opf_dataset_utils.physics.utils import extract_branch_admittances
+from opf_dataset_utils.physics.voltage import (
+    get_voltage_angles,
+    get_voltages_magnitudes,
+)
 
 
 def calculate_branch_powers(data: HeteroData, predictions: Dict, branch_type: str) -> Tuple[Tensor, Tensor]:
@@ -37,12 +40,12 @@ def calculate_branch_powers(data: HeteroData, predictions: Dict, branch_type: st
 
     edge_index = data.edge_index_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)]
 
-    Vm = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
+    Vm = get_voltages_magnitudes(predictions)
 
     Vm_i = Vm[edge_index[EdgeIndexIndices.FROM]]
     Vm_j = Vm[edge_index[EdgeIndexIndices.TO]]
 
-    Va = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_ANGLE]
+    Va = get_voltage_angles(predictions)
 
     V_i = Vm_i * torch.exp(1j * Va[edge_index[EdgeIndexIndices.FROM]])
     V_j = Vm_j * torch.exp(1j * Va[edge_index[EdgeIndexIndices.TO]])

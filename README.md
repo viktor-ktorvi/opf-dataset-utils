@@ -72,6 +72,20 @@ costs_per_grid = calculate_costs_per_grid(data, data.y_dict)
 costs_per_generator = calculate_costs_per_generator(data, data.y_dict)
 ```
 
+#### Inequality violations
+
+See [scripts/inequality_errors.py](scripts/inequality_errors.py) for a full example.
+
+```python
+from opf_dataset_utils.enumerations import EdgeTypes
+from opf_dataset_utils.physics.errors.inequality.voltage import calculate_upper_voltage_angle_difference_errors
+from opf_dataset_utils.physics.errors.inequality.generator_power import calculate_lower_active_power_errors
+
+upper_voltage_angle_violations_transformer = calculate_upper_voltage_angle_difference_errors(data, data.y_dict, EdgeTypes.TRANSFORMER)
+lower_active_power_generation_violations = calculate_lower_active_power_errors(data, data.y_dict)
+# etc.
+```
+
 #### Branch power flows
 
 See [scripts/branch_powers.py](scripts/branch_powers.py) for a full example.

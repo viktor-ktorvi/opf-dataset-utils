@@ -24,7 +24,7 @@ def main():
     transformer_powers_from, transformer_powers_to = calculate_branch_powers(batch, batch.y_dict, EdgeTypes.TRANSFORMER)
 
     print("AC line power flows [p.u.]:")
-    print(ac_line_powers_from)  # TODO link in readme; add in scripts readme
+    print(ac_line_powers_from)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,12 @@ from matplotlib.axes import Axes
 from torch_geometric.data import HeteroData
 from torch_geometric.utils import to_networkx
 
-from opf_dataset_utils.enumerations import BusTypes, EdgeTypes, NodeTypes
+from opf_dataset_utils.enumerations import (
+    BusTypes,
+    EdgeTypes,
+    GridBusIndices,
+    NodeTypes,
+)
 from opf_dataset_utils.plotting.utils import (
     edge_index_to_list_of_tuples,
     set_equipment_node_distances,
@@ -50,7 +55,7 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
     node_type_shapes = {NodeTypes.BUS: "o", NodeTypes.LOAD: "v", NodeTypes.GENERATOR: "h", NodeTypes.SHUNT: "d"}
 
     # determine which node is the reference node
-    reference_mask = heterogenous_data.x_dict[NodeTypes.BUS][:, 1] == BusTypes.REFERENCE
+    reference_mask = heterogenous_data.x_dict[NodeTypes.BUS][:, GridBusIndices.BUS_TYPE] == BusTypes.REFERENCE
     reference_node = (
         heterogenous_data.node_offsets[NodeTypes.BUS]
         + torch.arange(0, heterogenous_data.x_dict[NodeTypes.BUS].shape[0])[reference_mask]
