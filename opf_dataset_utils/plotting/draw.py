@@ -12,7 +12,6 @@ from opf_dataset_utils.enumerations import (
 )
 from opf_dataset_utils.plotting.utils import (
     edge_index_to_list_of_tuples,
-    set_equipment_node_distances,
 )
 
 
@@ -32,9 +31,6 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
     -------
 
     """
-
-    # TODO maybe draw the bus subgraph first (calculate pos just for those);
-    #  then for each draw it"s loads/generators/shunts (calculate pos for that tree with the bus as a root)
 
     # to homogeneous and networkx
     homogenous_data = heterogenous_data.to_homogeneous()
@@ -56,26 +52,13 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
 
     # determine which node is the reference node
     reference_mask = heterogenous_data.x_dict[NodeTypes.BUS][:, GridBusIndices.BUS_TYPE] == BusTypes.REFERENCE
-    reference_node = (
-        heterogenous_data.node_offsets[NodeTypes.BUS]
-        + torch.arange(0, heterogenous_data.x_dict[NodeTypes.BUS].shape[0])[reference_mask]
-    )
-    if len(reference_node) > 1:
-        reference_node = reference_node[0]
 
-    # attempt a decently clean layout
-    pos = nx.kamada_kawai_layout(
-        G,
-        dist=set_equipment_node_distances(
-            heterogenous_data, edge_type_ids, distance=0.15
-        ),  # set equipment close to their corresponding buses
-        pos=nx.bfs_layout(G, start=reference_node.item()),  # init with breath first search layout
-    )
+    pos = nx.nx_pydot.graphviz_layout(G)
 
     # draw different edge types
     ac_line_mask = homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS)]
     transformer_mask = (
-        homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
+            homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
     )
 
     equipment_links = edge_index_to_list_of_tuples(
@@ -111,7 +94,6 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
                 ax=ax,
                 nodelist=torch.arange(0, homogenous_data.num_nodes)[node_mask][reference_mask].tolist(),
                 node_color="#cc071e",
-                # node_shape=node_type_shapes[node_type],
                 node_shape="s",
                 label="reference bus",
                 **nx_node_kwargs,
