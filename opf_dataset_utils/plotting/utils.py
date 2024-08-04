@@ -1,9 +1,7 @@
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
+from matplotlib.axes import Axes
 from torch import LongTensor
-from torch_geometric.data import HeteroData
-
-from opf_dataset_utils.enumerations import EdgeTypes
 
 
 def edge_index_to_list_of_tuples(edge_index: LongTensor) -> List[Tuple[int]]:
@@ -21,3 +19,24 @@ def edge_index_to_list_of_tuples(edge_index: LongTensor) -> List[Tuple[int]]:
     """
     edge_list = edge_index.tolist()
     return list(zip(edge_list[0], edge_list[1]))
+
+
+def display_legend(ax: Axes, **kwargs):
+    """
+    Display legend. Resize markers so that they fit the legend.
+    Parameters
+    ----------
+    ax: Axes
+        Axes.
+    kwargs
+        Legend kwargs.
+
+    Returns
+    -------
+
+    """
+    legend = ax.legend(**kwargs)
+
+    # make sure markers fit into the legend box
+    for handle in legend.legend_handles:
+        handle._sizes = [150]

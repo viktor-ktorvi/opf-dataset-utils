@@ -1,0 +1,26 @@
+bus_retention_ratio: 1.0
+
+equipment_retention_ratio: 1.0
+
+filepath: data/case118_120000.json
+#filepath: data/dataset_release_1/pglib_opf_case14_ieee/raw/gridopt-dataset-tmp/dataset_release_1/pglib_opf_case14_ieee/group_0/example_0.json
+
+inches_per:
+  row: 3
+  column: 3
+
+node_size: 50
+
+num_columns: 6
+
+num_hops_range:
+  min: 3
+  max: 7
+
+num_subgraphs: 18
+
+random_seed: 1
+
+bus_size_range:
+  min: 20
+  max: 40

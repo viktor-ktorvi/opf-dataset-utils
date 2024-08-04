@@ -11,11 +11,11 @@ from opf_dataset_utils.enumerations import (
     NodeTypes,
 )
 from opf_dataset_utils.plotting.utils import (
-    edge_index_to_list_of_tuples,
+    edge_index_to_list_of_tuples, display_legend,
 )
 
 
-def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
+def draw_graph(heterogenous_data: HeteroData, ax: Axes, show_legend: bool = True, **nx_node_kwargs):
     """
     Draw an OPF power grid graph.
     Parameters
@@ -24,6 +24,8 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
         Heterogenous OPFData.
     ax: Axes
         Axes.
+    show_legend: bool
+        To display the legend or not.
     nx_node_kwargs
         draw_networkx_nodes kwargs.
 
@@ -100,8 +102,6 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, **nx_node_kwargs):
             )
 
     ax.axis("off")  # remove border
-    legend = ax.legend()
 
-    # make sure markers fit into the legend box
-    for handle in legend.legend_handles:
-        handle._sizes = [150]
+    if show_legend:
+        display_legend(ax)
