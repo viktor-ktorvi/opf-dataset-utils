@@ -1,5 +1,9 @@
 bus_retention_ratio: 1.0
 
+bus_size_range:
+  min: 20
+  max: 40
+
 equipment_retention_ratio: 1.0
 
 filepath: data/case118_120000.json
@@ -11,16 +15,18 @@ inches_per:
 
 node_size: 50
 
-num_columns: 6
+num_columns: 5
 
 num_hops_range:
   min: 3
   max: 7
 
-num_subgraphs: 18
+num_subgraphs: 10
 
 random_seed: 1
 
-bus_size_range:
-  min: 20
-  max: 40
+saving:
+  filepath: img/sampled_subgraph.pdf
+
+show: True
+

@@ -70,9 +70,9 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, show_legend: bool = True
     transformers = edge_index_to_list_of_tuples(homogenous_data.edge_index[:, transformer_mask])
 
     # TODO drawing arrows doesn't show labels in legend
-    nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=equipment_links, style=":", label="equipment link")
+    nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=equipment_links, style="dotted", label="equipment link")
     nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=ac_lines, label="AC line")
-    nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=transformers, style="--", label="transformer")
+    nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=transformers, style=(0, (5, 1)), label="transformer")
 
     # draw different node types
     for node_type in node_types_ids.keys():

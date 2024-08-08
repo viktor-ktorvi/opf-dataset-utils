@@ -3,6 +3,7 @@ import os
 import random
 
 import hydra
+import matplotlib
 from matplotlib import pyplot as plt, gridspec
 from torch_geometric import seed_everything
 from tqdm import tqdm
@@ -15,6 +16,7 @@ from opf_dataset_utils.plotting.draw import draw_graph
 @hydra.main(version_base=None, config_path=os.path.join(os.getcwd(), "config"), config_name="sample_subgraphs")
 def main(cfg):
     seed_everything(cfg.random_seed)
+    matplotlib.rcParams["figure.autolayout"] = True
     data = json2data(cfg.filepath)
 
     fig, ax = plt.subplots(1, 1)
@@ -41,7 +43,10 @@ def main(cfg):
         ax = fig.add_subplot(grid_spec[i])
         draw_graph(subgraph_data, ax=ax, node_size=cfg.node_size, show_legend=False)
 
-    plt.show()
+    fig.savefig(cfg.saving.filepath)
+
+    if cfg.show:
+        plt.show()
 
 
 if __name__ == "__main__":
