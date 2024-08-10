@@ -15,13 +15,13 @@ from opf_dataset_utils.plotting.utils import (
 )
 
 
-def draw_graph(heterogenous_data: HeteroData, ax: Axes, show_legend: bool = True, **nx_node_kwargs):
+def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = True, **nx_node_kwargs):
     """
     Draw an OPF power grid graph.
     Parameters
     ----------
-    heterogenous_data: HeteroData
-        Heterogenous OPFData.
+    heterogeneous_data: HeteroData
+        heterogeneous OPFData.
     ax: Axes
         Axes.
     show_legend: bool
@@ -35,12 +35,12 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, show_legend: bool = True
     """
 
     # to homogeneous and networkx
-    homogenous_data = heterogenous_data.to_homogeneous()
+    homogenous_data = heterogeneous_data.to_homogeneous()
     G = to_networkx(homogenous_data)
 
     # extract node and edge types
-    node_types_ids = dict(zip(heterogenous_data.node_types, list(range(0, len(heterogenous_data.node_types)))))
-    edge_type_ids = dict(zip(heterogenous_data.edge_types, list(range(0, len(heterogenous_data.edge_types)))))
+    node_types_ids = dict(zip(heterogeneous_data.node_types, list(range(0, len(heterogeneous_data.node_types)))))
+    edge_type_ids = dict(zip(heterogeneous_data.edge_types, list(range(0, len(heterogeneous_data.edge_types)))))
 
     # hardcode node colors and shape
     node_type_colors = {
@@ -53,7 +53,7 @@ def draw_graph(heterogenous_data: HeteroData, ax: Axes, show_legend: bool = True
     node_type_shapes = {NodeTypes.BUS: "o", NodeTypes.LOAD: "v", NodeTypes.GENERATOR: "h", NodeTypes.SHUNT: "d"}
 
     # determine which node is the reference node
-    reference_mask = heterogenous_data.x_dict[NodeTypes.BUS][:, GridBusIndices.BUS_TYPE] == BusTypes.REFERENCE
+    reference_mask = heterogeneous_data.x_dict[NodeTypes.BUS][:, GridBusIndices.BUS_TYPE] == BusTypes.REFERENCE
 
     pos = nx.nx_pydot.graphviz_layout(G)
 
