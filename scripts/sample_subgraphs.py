@@ -5,6 +5,7 @@ import random
 import hydra
 import matplotlib
 from matplotlib import pyplot as plt, gridspec
+from omegaconf import DictConfig
 from torch_geometric import seed_everything
 from tqdm import tqdm
 
@@ -14,7 +15,18 @@ from opf_dataset_utils.plotting.draw import draw_graph
 
 
 @hydra.main(version_base=None, config_path=os.path.join(os.getcwd(), "config"), config_name="sample_subgraphs")
-def main(cfg):
+def main(cfg: DictConfig):
+    """
+    Sample subgraphs according to config.
+    Parameters
+    ----------
+    cfg: DictConfig
+
+
+    Returns
+    -------
+
+    """
     seed_everything(cfg.random_seed)
     matplotlib.rcParams["figure.autolayout"] = True
     data = json2data(cfg.filepath)
