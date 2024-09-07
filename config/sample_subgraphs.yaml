@@ -4,6 +4,12 @@ bus_size_range:
   min: 20
   max: 40
 
+edit_distance:
+  approximation_iterations: 1
+  num_bins: 20
+  num_samples: 100
+  subgraphs: True
+
 equipment_retention_ratio: 1.0
 
 filepath: data/case118_120000.json
