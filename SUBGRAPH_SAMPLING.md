@@ -21,7 +21,7 @@ Install the conda environment
 ```
 cd opf-dataset-utils
 make conda-create-env
-conda activate building-sci-env
+conda activate opf-dataset-utils-env
 make install
 ```
 
