@@ -11,6 +11,7 @@ python = ">=3.10,<3.12"
 matplotlib = "^3.9.0"
 numpy = "1.26.0"
 pydot = "^3.0.2"
+
 [tool.poetry.group.dev]
 optional = true
 
@@ -22,6 +23,7 @@ torch-scatter = { version = "^2.1.2+pt23cu121", source = "torch_geometric_utils_
 torch-sparse = { version = "^0.6.18+pt23cu121", source = "torch_geometric_utils_cuda121" }
 torch-cluster = { version = "^1.6.3+pt23cu121", source = "torch_geometric_utils_cuda121" }
 torch-spline-conv = { version = "^1.2.2+pt23cu121", source = "torch_geometric_utils_cuda121" }
+joblib = "^1.4.2"
 hydra-core = "^1.3.2"
 torch-geometric = "^2.6.1"
 pytest = "^7.4.4"
@@ -35,6 +37,7 @@ flake8 = "^7.0.0"
 pre-commit = "^3.7.0"
 flake8-pyproject = "^1.2.3"
 
+joblib = "^1.4.2"
 [tool.poetry.group.lab]
 optional = true
 

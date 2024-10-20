@@ -1,0 +1,3 @@
+python3 -m scripts.sample_subgraphs saving.filepath="img/full_retention.pdf" show=False
+python3 -m scripts.sample_subgraphs bus_retention_ratio=0.1 num_hops_range.min=10 num_hops_range.max=40 saving.filepath="img/low_bus_retention.pdf" show=False
+python3 -m scripts.sample_subgraphs bus_retention_ratio=0.1 equipment_retention_ratio=0.3 num_hops_range.min=10 num_hops_range.max=40 saving.filepath="img/low_bus_low_equipment_retention.pdf" show=False
