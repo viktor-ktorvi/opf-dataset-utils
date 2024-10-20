@@ -1,14 +1,19 @@
 import copy
 import math
 import random
-from typing import List, Dict
+from typing import Dict, List
 
 import torch
 from torch import LongTensor
 from torch_geometric.data import HeteroData
 from torch_geometric.transforms import ToUndirected
 
-from opf_dataset_utils.enumerations import NodeTypes, EdgeTypes, GridBusIndices, BusTypes
+from opf_dataset_utils.enumerations import (
+    BusTypes,
+    EdgeTypes,
+    GridBusIndices,
+    NodeTypes,
+)
 
 
 def get_neighborhood(source_nodes: List[int], edge_index: LongTensor) -> List[int]:
@@ -48,7 +53,9 @@ def get_set_difference(a: List, b: List) -> List:
     return list(set(a) - set(b))
 
 
-def sample_buses(data: HeteroData, num_hops: int, bus_retention_ratio: float = 1.0, equipment_retention_ratio: float = 1.0) -> Dict[str, LongTensor]:
+def sample_buses(
+    data: HeteroData, num_hops: int, bus_retention_ratio: float = 1.0, equipment_retention_ratio: float = 1.0
+) -> Dict[str, LongTensor]:
     """
     Sample a subset of buses (and attached equipment) from the given OPFData object.
     Parameters
@@ -82,14 +89,20 @@ def sample_buses(data: HeteroData, num_hops: int, bus_retention_ratio: float = 1
         raise ValueError(f"Expected the bus retention ratio to be in (0, 1], but got {bus_retention_ratio} instead.")
 
     if not 0 < equipment_retention_ratio <= 1:
-        raise ValueError(f"Expected the equipment retention ratio to be in (0, 1], but got {equipment_retention_ratio} instead.")
+        raise ValueError(
+            f"Expected the equipment retention ratio to be in (0, 1], but got {equipment_retention_ratio} instead."
+        )
 
     edge_index_dict = ToUndirected()(data).edge_index_dict
 
-    bus_edge_types = [(NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS),
-                      (NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
+    bus_edge_types = [
+        (NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS),
+        (NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS),
+    ]
 
-    bus_subset = [random.randint(0, data.x_dict[NodeTypes.BUS].shape[0] - 1)]  # TODO add option to start from a specific region
+    bus_subset = [
+        random.randint(0, data.x_dict[NodeTypes.BUS].shape[0] - 1)
+    ]  # TODO add option to start from a specific region
 
     neighborhood = copy.deepcopy(bus_subset)
 

@@ -11,7 +11,8 @@ from opf_dataset_utils.enumerations import (
     NodeTypes,
 )
 from opf_dataset_utils.plotting.utils import (
-    edge_index_to_list_of_tuples, display_legend,
+    display_legend,
+    edge_index_to_list_of_tuples,
 )
 
 
@@ -60,7 +61,7 @@ def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = Tru
     # draw different edge types
     ac_line_mask = homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS)]
     transformer_mask = (
-            homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
+        homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
     )
 
     equipment_links = edge_index_to_list_of_tuples(
@@ -70,7 +71,9 @@ def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = Tru
     transformers = edge_index_to_list_of_tuples(homogenous_data.edge_index[:, transformer_mask])
 
     # TODO drawing arrows doesn't show labels in legend
-    nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=equipment_links, style="dotted", label="equipment link")
+    nx.draw_networkx_edges(
+        G, pos, ax=ax, arrows=False, edgelist=equipment_links, style="dotted", label="equipment link"
+    )
     nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=ac_lines, label="AC line")
     nx.draw_networkx_edges(G, pos, ax=ax, arrows=False, edgelist=transformers, style=(0, (5, 1)), label="transformer")
 

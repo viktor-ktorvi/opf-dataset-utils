@@ -13,7 +13,9 @@ def main():
     -------
 
     """
-    dataset = OPFDataset("data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False)
+    dataset = OPFDataset(
+        "data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False, num_groups=1
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -25,6 +27,9 @@ def main():
 
     print("AC line power flows [p.u.]:")
     print(ac_line_powers_from)
+    print("\n")
+    print("Transformer line power flows [p.u.]:")
+    print(transformer_powers_from)
 
 
 if __name__ == "__main__":

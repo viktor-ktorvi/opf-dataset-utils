@@ -15,7 +15,9 @@ def main():
     -------
 
     """
-    dataset = OPFDataset("data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False)
+    dataset = OPFDataset(
+        "data", case_name="pglib_opf_case30_ieee", split="val", topological_perturbations=False, num_groups=1
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

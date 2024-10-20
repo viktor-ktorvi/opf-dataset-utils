@@ -16,8 +16,24 @@ We implement:
 
 ## Installation
 
-Installation is currently available directly from GitHub:
+### Requirements
 
+Requires [_PyTorch_](https://pytorch.org/get-started/locally/) (any [version](https://pytorch.org/get-started/previous-versions/)
+supported by PyTorch Geometric) and [_PyTorch Geometric_](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) (>=2.6.0)
+including it's optional dependencies (`pyg_lib`, `torch_scatter`, `torch_sparse`, `torch_cluster`, and `torch_spline_conv`).
+
+May require installing _graphviz_ for visualization purposes.
+
+### From PyPI
+
+Install latest release from PyPI:
+```
+pip install opf_dataset_utils
+```
+
+### Directly from GitHub
+
+Install the latest version directly from GitHub:
 ```
 pip install git+https://github.com/viktor-ktorvi/opf-dataset-utils.git
 ```
@@ -47,11 +63,13 @@ See [scripts/power_flow_errors.py](scripts/power_flow_errors.py) for a full exam
 ```python
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
 
-print("Mean power flow errors:")
-print(f"\tSolution: {calculate_power_flow_errors(batch, batch.y_dict).abs().mean():.5e}")
-print(f"\tUntrained model prediction: {calculate_power_flow_errors(batch, predictions).abs().mean():.5f}")
-```
+with torch.no_grad():
+    untrained_predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
 
+mean_abs_errors_solution = calculate_power_flow_errors(batch, batch.y_dict).abs().mean()
+mean_abs_errors_untrained = calculate_power_flow_errors(batch, untrained_predictions).abs().mean()
+```
+Example results:
 ```
 Mean power flow errors:
 	Solution: 1.28563e-06 [p.u.]
@@ -72,6 +90,23 @@ costs_per_grid = calculate_costs_per_grid(data, data.y_dict)
 costs_per_generator = calculate_costs_per_generator(data, data.y_dict)
 ```
 
+Example results:
+
+```
+Costs per grid [$/h]:
+tensor([7564.9541, 8622.5996, 7247.7939, 7504.3018, 8446.8887, 7478.8228,
+        8023.4907], device='cuda:0')
+Costs per generator [$/h]:
+tensor([4003.2192, 3561.7349,    0.0000,    0.0000,    0.0000,    0.0000,
+        4035.1089, 4587.4902,    0.0000,    0.0000,    0.0000,    0.0000,
+        3992.6309, 3255.1628,    0.0000,    0.0000,    0.0000,    0.0000,
+        4005.5452, 3498.7563,    0.0000,    0.0000,    0.0000,    0.0000,
+        4045.0081, 4401.8809,    0.0000,    0.0000,    0.0000,    0.0000,
+        3994.2031, 3484.6196,    0.0000,    0.0000,    0.0000,    0.0000,
+        4021.5444, 4001.9463,    0.0000,    0.0000,    0.0000,    0.0000],
+       device='cuda:0')
+```
+
 #### Inequality violations
 
 See [scripts/inequality_errors.py](scripts/inequality_errors.py) for a full example.
@@ -86,6 +121,49 @@ lower_active_power_generation_violations = calculate_lower_active_power_errors(d
 # etc.
 ```
 
+Example results:
+
+```
+Worst case violations:
+
+Solution:
+
+Upper Vm:                         1.1920928955078125e-07 [p.u.]                   
+Lower Vm:                                            0.0 [p.u.]                   
+Upper Va diff. (transformers):                       0.0 [rad]                    
+Upper Va diff. (AC lines):                           0.0 [rad]                    
+Lower Va diff. (transformers):                       0.0 [rad]                    
+Lower Va diff. (AC lines):                           0.0 [rad]                    
+Upper Pg:                                            0.0 [p.u.]                   
+Lower Pg:                          9.985742011053844e-09 [p.u.]                   
+Upper Qg:                                            0.0 [p.u.]                   
+Lower Qg:                                            0.0 [p.u.]                   
+Upper S_ij (transformers):                           0.0 [p.u.]                   
+Upper S_ij (AC lines):                               0.0 [p.u.]                   
+Upper S_ji (transformers):                           0.0 [p.u.]                   
+Upper S_ji (AC lines):                               0.0 [p.u.]                   
+
+Untrained model:
+
+Upper Vm:                             112.72354125976562 [p.u.]                   
+Lower Vm:                             306.87078857421875 [p.u.]                   
+Upper Va diff. (transformers):                       0.0 [rad]                    
+Upper Va diff. (AC lines):            1149.0396728515625 [rad]                    
+Lower Va diff. (transformers):         124.8240737915039 [rad]                    
+Lower Va diff. (AC lines):             686.0045776367188 [rad]                    
+Upper Pg:                                            0.0 [p.u.]                   
+Lower Pg:                              33.55585479736328 [p.u.]                   
+Upper Qg:                             0.1578141152858734 [p.u.]                   
+Lower Qg:                              157.2376708984375 [p.u.]                   
+Upper S_ij (transformers):                  417092.96875 [p.u.]                   
+Upper S_ij (AC lines):                        2345705.25 [p.u.]                   
+Upper S_ji (transformers):              10831.6123046875 [p.u.]                   
+Upper S_ji (AC lines):                        3082554.75 [p.u.]                   
+
+Process finished with exit code 0
+
+```
+
 #### Branch power flows
 
 See [scripts/branch_powers.py](scripts/branch_powers.py) for a full example.
@@ -96,6 +174,22 @@ from opf_dataset_utils.physics.power import calculate_branch_powers
 
 ac_line_powers_from, ac_line_powers_to = calculate_branch_powers(batch, batch.y_dict, EdgeTypes.AC_LINE)
 transformer_powers_from, transformer_powers_to = calculate_branch_powers(batch, batch.y_dict, EdgeTypes.TRANSFORMER)
+```
+
+Example results:
+
+```
+AC line power flows [p.u.]:
+tensor([ 1.9860e+00-0.0678j,  8.5920e-01+0.0821j,  7.7557e-01-0.0108j,
+         5.6563e-01-0.0239j,  4.0300e-01+0.0017j, -2.6185e-01+0.1008j,
+        -6.7861e-01+0.1603j,  8.0781e-02+0.0468j,  8.7156e-02+0.0244j,
+         1.9349e-01+0.0730j,  2.4476e-07-0.1052j,  2.9223e-01+0.0275j,
+         5.5007e-02+0.0391j,  9.9253e-02+0.0241j, -4.9108e-02-0.0280j,
+         1.5681e-02+0.0090j,  6.4659e-02+0.0209j], device='cuda:0')
+
+
+Transformer line power flows [p.u.]:
+tensor([0.2922-0.0601j, 0.1681+0.0037j, 0.4683+0.1187j], device='cuda:0')
 ```
 
 #### Etc.

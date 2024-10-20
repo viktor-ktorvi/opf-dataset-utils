@@ -4,13 +4,18 @@ import random
 
 import hydra
 import matplotlib
-from matplotlib import pyplot as plt, gridspec
+from matplotlib import gridspec
+from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 from torch_geometric import seed_everything
 from tqdm import tqdm
 
 from opf_dataset_utils.data.loading import json2data
-from opf_dataset_utils.data.subgraph_sampling import sample_buses, contains_reference_bus, is_within_size_range
+from opf_dataset_utils.data.subgraph_sampling import (
+    contains_reference_bus,
+    is_within_size_range,
+    sample_buses,
+)
 from opf_dataset_utils.plotting.draw import draw_graph
 
 
@@ -42,12 +47,16 @@ def main(cfg: DictConfig):
 
     for i in tqdm(range(cfg.num_subgraphs), desc="Sampling subgraphs"):
         while True:
-            subset_dict = sample_buses(data,
-                                       num_hops=random.randint(cfg.num_hops_range.min, cfg.num_hops_range.max),
-                                       bus_retention_ratio=cfg.bus_retention_ratio,
-                                       equipment_retention_ratio=cfg.equipment_retention_ratio)
+            subset_dict = sample_buses(
+                data,
+                num_hops=random.randint(cfg.num_hops_range.min, cfg.num_hops_range.max),
+                bus_retention_ratio=cfg.bus_retention_ratio,
+                equipment_retention_ratio=cfg.equipment_retention_ratio,
+            )
 
-            if contains_reference_bus(subset_dict, data) and is_within_size_range(subset_dict, minimum=cfg.bus_size_range.min, maximum=cfg.bus_size_range.max):
+            if contains_reference_bus(subset_dict, data) and is_within_size_range(
+                subset_dict, minimum=cfg.bus_size_range.min, maximum=cfg.bus_size_range.max
+            ):
                 break
 
         subgraph_data = data.subgraph(subset_dict)

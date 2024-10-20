@@ -27,7 +27,9 @@ def main():
     -------
 
     """
-    dataset = OPFDataset("data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False)
+    dataset = OPFDataset(
+        "data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False, num_groups=1
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -38,12 +40,14 @@ def main():
     untrained_model.to(device)
 
     with torch.no_grad():
-        predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
+        untrained_predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
 
-    print(batch)
+    mean_abs_errors_solution = calculate_power_flow_errors(batch, batch.y_dict).abs().mean()
+    mean_abs_errors_untrained = calculate_power_flow_errors(batch, untrained_predictions).abs().mean()
+
     print("Mean power flow errors:")
-    print(f"\tSolution: {calculate_power_flow_errors(batch, batch.y_dict).abs().mean():.5e} [p.u.]")
-    print(f"\tUntrained model prediction: {calculate_power_flow_errors(batch, predictions).abs().mean():.5f} [p.u.]")
+    print(f"\tSolution: {mean_abs_errors_solution:.5e} [p.u.]")
+    print(f"\tUntrained model prediction: {mean_abs_errors_untrained:.5f} [p.u.]")
 
 
 if __name__ == "__main__":
