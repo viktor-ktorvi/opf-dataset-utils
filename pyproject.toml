@@ -35,6 +35,8 @@ flake8 = "^7.0.0"
 pre-commit = "^3.7.0"
 flake8-pyproject = "^1.2.3"
 
+lightning = "^2.4.0"
+wandb = "^0.18.5"
 [tool.poetry.group.lab]
 optional = true
 
