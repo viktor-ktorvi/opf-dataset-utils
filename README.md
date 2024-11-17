@@ -1,4 +1,7 @@
 # opf-dataset-utils
+![PyPI Downloads](https://static.pepy.tech/badge/opf-dataset-utils)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+<hr>
 
 In this package we provide utils to support working with the
 [OPFDataset](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.OPFDataset.html#torch_geometric.datasets.OPFDataset).
@@ -13,6 +16,10 @@ We implement:
 * Data visualization
 * Enums for indexing the OPFData JSON format
 * And more...
+
+## Contributing
+
+Any sort of contribution or feedback is very welcome!
 
 ## Installation
 
