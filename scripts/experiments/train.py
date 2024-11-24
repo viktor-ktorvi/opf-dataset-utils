@@ -54,7 +54,7 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-            self, data: OPFDataModule, hidden_channels: int, num_layers: int, num_mlp_layers: int, learning_rate: float
+            self, data_module: OPFDataModule, hidden_channels: int, num_layers: int, num_mlp_layers: int, learning_rate: float
     ):
         super().__init__()
 
@@ -62,9 +62,15 @@ class ExampleModel(LightningModule):
         self.criterion = nn.MSELoss()
 
         # init modules
-        example_batch: HeteroData = next(iter(data.train_dataloader()))
+        example_batch: HeteroData = next(iter(data_module.train_dataloader()))
 
-        self.in_scaler = HeteroStandardScaler(data.train_dataloader(), attribute="x")
+        self.in_scaler = HeteroStandardScaler()
+        self.out_scaler = HeteroStandardScaler(inverse=True)
+        for batch in data_module.train_dataloader():
+            self.in_scaler.update(batch.x_dict)
+            self.out_scaler.update(batch.y_dict)
+        self.in_scaler.calculate_statistics()
+        self.out_scaler.calculate_statistics()
 
         self.in_mlp = HeteroMLP(
             in_channels=example_batch.num_node_features,
@@ -94,13 +100,11 @@ class ExampleModel(LightningModule):
             num_layers=num_mlp_layers,
         )
 
-        self.out_scaler = HeteroStandardScaler(data.train_dataloader(), attribute="y", inverse=True)
-
         # initialize lazy modules (edge_dim in the GNN)
         with torch.no_grad():
             self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
 
-        # metrics (must be object attributes)
+        # metrics (must be object properties)
 
         # power flow
         for split in Split:
