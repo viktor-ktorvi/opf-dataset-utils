@@ -54,7 +54,12 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-            self, data_module: OPFDataModule, hidden_channels: int, num_layers: int, num_mlp_layers: int, learning_rate: float
+        self,
+        data_module: OPFDataModule,
+        hidden_channels: int,
+        num_layers: int,
+        num_mlp_layers: int,
+        learning_rate: float,
     ):
         super().__init__()
 
@@ -124,10 +129,10 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-            self,
-            x_dict: dict[str, Tensor],
-            edge_index_dict: dict[tuple[str, str, str], LongTensor],
-            edge_attr_dict: dict[tuple[str, str, str], Tensor],
+        self,
+        x_dict: dict[str, Tensor],
+        edge_index_dict: dict[tuple[str, str, str], LongTensor],
+        edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
@@ -143,13 +148,13 @@ class ExampleModel(LightningModule):
         return torch.stack([self.criterion(pred_dict[key], y_dict[key]) for key in y_dict]).sum()
 
     def _log_metrics(
-            self,
-            split: str,
-            batch,
-            pred_dict: dict[str, Tensor],
-            mse: Tensor,
-            loss: Tensor,
-            abs_power_flow_errors_pu: Tensor,
+        self,
+        split: str,
+        batch,
+        pred_dict: dict[str, Tensor],
+        mse: Tensor,
+        loss: Tensor,
+        abs_power_flow_errors_pu: Tensor,
     ):
         on_step = True if split == Split.TRAIN else False
         self.log(
@@ -239,7 +244,7 @@ def main(cfg: DictConfig):
     warnings.filterwarnings("ignore", message="The total number of parameters detected may be inaccurate")
     warnings.filterwarnings("ignore", message="There is a wandb run already in progress")
 
-    wandb.init(project=cfg.wandb.project, mode="disabled" if cfg.wandb.offline else "online")
+    wandb.init(project=cfg.wandb.project, mode=cfg.wandb.mode)
 
     # cross-update hydra and wandb configs
     cfg = OmegaConf.merge(cfg, dict(wandb.config))
@@ -247,7 +252,7 @@ def main(cfg: DictConfig):
         {"config": OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)}, allow_val_change=True
     )
 
-    wandb_logger = WandbLogger(project=cfg.wandb.project, offline=cfg.wandb.offline)
+    wandb_logger = WandbLogger(project=cfg.wandb.project, offline=False if cfg.wandb.mode == "online" else True)
 
     torch.set_float32_matmul_precision("high")
 

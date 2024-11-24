@@ -2,11 +2,20 @@ random_seed: 123
 
 num_workers: 8
 
+sweep:
+  config_name: default_config_name
+  name: default_sweep_name
+  method: grid
+  program: scripts.experiments.train
+  parameters: -1
+  overrides: []
+
 wandb:
   project: opf-dataset-utils
-  offline: False
+  mode: online
 
 defaults:
   - data: default
+  - slurm: default
   - training: default
   - _self_ # https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order/

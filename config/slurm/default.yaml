@@ -1,0 +1,17 @@
+job_name: default_job_name
+output: outputs/default_output.txt
+error: outputs/default_error.txt
+ntasks: 1
+cpus_per_task: 8
+time: "48:00:00"
+mem: 16G
+gres: gpu:1
+
+
+path: scripts/experiments/sbatch
+sbatch_script_name: ${slurm.job_name}.sh
+num_agents: 4
+
+existing_sweep_config_path: null
+existing_sweep_id: null
+existing_sbatch_script_path: null

@@ -31,12 +31,12 @@ class StandardScaler(nn.Module):
         batch = batch.reshape(-1, size)
         self.num_samples += batch.shape[0]
         self.value_sum += batch.sum(dim=0)
-        self.square_sum += (batch ** 2).sum(dim=0)
+        self.square_sum += (batch**2).sum(dim=0)
 
     def calculate_statistics(self):
         mean = self.value_sum / self.num_samples
 
-        std = torch.sqrt(self.square_sum / self.num_samples - mean ** 2)
+        std = torch.sqrt(self.square_sum / self.num_samples - mean**2)
         std[std < 1e-9] = 1.0
         std[torch.isnan(std)] = 1.0
 
