@@ -145,7 +145,9 @@ class ExampleModel(LightningModule):
         return out_dict
 
     def _calculate_loss(self, pred_dict: dict[str, Tensor], y_dict: dict[str, Tensor]) -> Tensor:
-        return torch.stack([self.criterion(pred_dict[key], y_dict[key]) for key in y_dict]).sum()
+        pred_dict_scaled = self.out_scaler.scale(pred_dict)
+        y_dict_scaled = self.out_scaler.scale(y_dict)
+        return torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()
 
     def _log_metrics(
         self,
