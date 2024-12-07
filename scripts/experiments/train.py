@@ -64,7 +64,7 @@ class ExampleModel(LightningModule):
         super().__init__()
 
         self.learning_rate = learning_rate
-        self.criterion = nn.MSELoss()
+        self.criterion = nn.MSELoss()  # TODO probabilistic forecasting
 
         # init modules
         example_batch: HeteroData = next(iter(data_module.train_dataloader()))
@@ -84,6 +84,7 @@ class ExampleModel(LightningModule):
             num_layers=num_mlp_layers,
         )
 
+        # TODO more attention heads
         self.gnn = to_hetero(
             GAT(
                 in_channels=hidden_channels,
@@ -109,6 +110,8 @@ class ExampleModel(LightningModule):
         with torch.no_grad():
             self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
 
+        # TODO scheduler
+
         # metrics (must be object properties)
 
         # power flow
@@ -117,6 +120,8 @@ class ExampleModel(LightningModule):
         self.mean_abs_power_flow_errors = {
             split: getattr(self, f"{split}_mean_abs_power_flow_error") for split in Split
         }
+
+        # TODO power metrics (apparent power of all nodes averaged) (same unit as power flow error)
 
         # R2 score
         for split in Split:
@@ -190,7 +195,7 @@ class ExampleModel(LightningModule):
                 logger=True,
             )
 
-        # power flow TODO would be nice to log the powers in the grid and/or relative errors
+        # power flow
         # convert to kVA for better interpretability
         baseMVA = batch.x[batch.batch_dict[NodeTypes.BUS]]
         abs_power_flow_errors_kVA = abs_power_flow_errors_pu * baseMVA * 1e3
