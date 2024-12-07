@@ -7,14 +7,134 @@ from torch_geometric.data import HeteroData
 from opf_dataset_utils.enumerations import (
     EdgeIndexIndices,
     EdgeTypes,
+    GridLoadIndices,
     GridTransformerIndices,
     NodeTypes,
+    SolutionGeneratorIndices,
 )
-from opf_dataset_utils.physics.utils import extract_branch_admittances
+from opf_dataset_utils.physics.utils import (
+    aggregate_bus_level,
+    extract_branch_admittances,
+)
 from opf_dataset_utils.physics.voltage import (
     get_voltage_angles,
     get_voltages_magnitudes,
 )
+
+
+def get_generator_powers(predictions: dict[str, Tensor]) -> Tensor:
+    """
+    Returns the generator powers per generator.
+    Parameters
+    ----------
+    predictions: dict[str, Tensor]
+        Predictions dictionary.
+
+    Returns
+    -------
+    Sg: Tensor
+        Generator powers per generator.
+    """
+    Sg = (
+        predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER]
+        + 1j * predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER]
+    )
+
+    return Sg
+
+
+def get_load_powers(data: HeteroData) -> Tensor:
+    """
+    Returns the load powers per load.
+    Parameters
+    ----------
+    data: HeteroData
+        OPFData.
+
+    Returns
+    -------
+    Sd: Tensor
+        Load powers per load.
+    """
+    Sd = (
+        data.x_dict[NodeTypes.LOAD][:, GridLoadIndices.ACTIVE_POWER]
+        + 1j * data.x_dict[NodeTypes.LOAD][:, GridLoadIndices.REACTIVE_POWER]
+    )
+
+    return Sd
+
+
+def get_generator_powers_per_bus(data: HeteroData, predictions: dict[str, Tensor]) -> Tensor:
+    """
+    Returns the generator powers per bus.
+    Parameters
+    ----------
+    data: HeteroData
+        OPFData.
+    predictions: dict[str, Tensor]
+        Predictions dictionary.
+
+    Returns
+    -------
+    Sg_bus: Tensor
+        Generator powers per bus.
+    """
+
+    num_buses = data.x_dict[NodeTypes.BUS].shape[0]
+
+    Sg_bus = aggregate_bus_level(
+        num_buses,
+        index=data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.GENERATOR_LINK, NodeTypes.GENERATOR)][
+            EdgeIndexIndices.FROM
+        ],
+        src=get_generator_powers(predictions),
+    )
+
+    return Sg_bus
+
+
+def get_load_powers_per_bus(data: HeteroData) -> Tensor:
+    """
+    Returns the load powers per bus.
+    Parameters
+    ----------
+    data: HeteroData
+        OPFData.
+
+    Returns
+    -------
+    Sd_bus: Tensor
+        Load powers per bus.
+    """
+    num_buses = data.x_dict[NodeTypes.BUS].shape[0]
+
+    Sd_bus = aggregate_bus_level(
+        num_buses,
+        index=data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.LOAD_LINK, NodeTypes.LOAD)][EdgeIndexIndices.FROM],
+        src=get_load_powers(data),
+    )
+
+    return Sd_bus
+
+
+def calculate_bus_powers(data: HeteroData, predictions: dict[str, Tensor]) -> Tensor:
+    """
+    Returns the complex powers per bus.
+    Parameters
+    ----------
+    data: HeteroData
+        OPFData.
+    predictions: dict[str, Tensor]
+        Predictions dictionary.
+
+    Returns
+    -------
+    S_bus: Tensor
+        Complex powers per bus.
+    """
+    Sg_bus = get_generator_powers_per_bus(data, predictions)
+    Sd_bus = get_load_powers_per_bus(data)
+    return Sg_bus - Sd_bus
 
 
 def calculate_branch_powers(data: HeteroData, predictions: Dict, branch_type: str) -> Tuple[Tensor, Tensor]:
