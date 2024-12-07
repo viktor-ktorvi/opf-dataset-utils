@@ -5,8 +5,10 @@ import hydra
 import torch
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import LightningModule, Trainer, seed_everything
+from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 from torch import LongTensor, Tensor, nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import GAT, to_hetero
 from torchmetrics import MeanMetric, Metric, R2Score
@@ -55,16 +57,18 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-        self,
-        data_module: OPFDataModule,
-        hidden_channels: int,
-        num_layers: int,
-        num_mlp_layers: int,
-        learning_rate: float,
+            self,
+            data_module: OPFDataModule,
+            hidden_channels: int,
+            num_layers: int,
+            num_mlp_layers: int,
+            learning_rate: float,
+            power_flow_multiplier: float
     ):
         super().__init__()
 
         self.learning_rate = learning_rate
+        self.power_flow_multiplier = power_flow_multiplier
         self.criterion = nn.MSELoss()  # TODO probabilistic forecasting
 
         # init modules
@@ -111,8 +115,6 @@ class ExampleModel(LightningModule):
         with torch.no_grad():
             self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
 
-        # TODO scheduler
-
         # metrics (must be object properties)   TODO I don't like all the boilerplate... could do something with torchmetrics
         # absolute power flow error
         for split in Split:
@@ -144,10 +146,10 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-        self,
-        x_dict: dict[str, Tensor],
-        edge_index_dict: dict[tuple[str, str, str], LongTensor],
-        edge_attr_dict: dict[tuple[str, str, str], Tensor],
+            self,
+            x_dict: dict[str, Tensor],
+            edge_index_dict: dict[tuple[str, str, str], LongTensor],
+            edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
@@ -165,13 +167,13 @@ class ExampleModel(LightningModule):
         return torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()
 
     def _log_metrics(
-        self,
-        split: str,
-        batch,
-        pred_dict: dict[str, Tensor],
-        mse: Tensor,
-        loss: Tensor,
-        abs_apparent_power_flow_errors_pu: Tensor,
+            self,
+            split: str,
+            batch,
+            pred_dict: dict[str, Tensor],
+            mse: Tensor,
+            loss: Tensor,
+            abs_apparent_power_flow_errors_pu: Tensor,
     ):
         on_step = True if split == Split.TRAIN else False
         self.log(
@@ -233,7 +235,7 @@ class ExampleModel(LightningModule):
 
         mask = apparent_powers_kVA > 0  # some buses can be exactly zero; this prevents divisions by zero
         relative_abs_power_flow_error_percentage = (
-            abs_apparent_power_flow_errors_kVA[mask] / apparent_powers_kVA[mask] * 100
+                abs_apparent_power_flow_errors_kVA[mask] / apparent_powers_kVA[mask] * 100
         )
 
         self.mean_relative_abs_power_flow_errors[split](relative_abs_power_flow_error_percentage)
@@ -252,7 +254,7 @@ class ExampleModel(LightningModule):
         abs_power_flow_errors_pu = calculate_power_flow_errors(batch, pred_dict).abs()
 
         mse = self._calculate_loss(pred_dict, batch.y_dict)
-        loss = mse + abs_power_flow_errors_pu.mean()  # TODO multiplier hyperparameters
+        loss = mse + self.power_flow_multiplier * abs_power_flow_errors_pu.mean()
 
         self._log_metrics(split, batch, pred_dict, mse, loss, abs_power_flow_errors_pu)
 
@@ -267,8 +269,19 @@ class ExampleModel(LightningModule):
     def test_step(self, batch, batch_idx):
         self._shared_eval(batch, Split.TEST)
 
-    def configure_optimizers(self) -> torch.optim.Adam:
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+    def configure_optimizers(self) -> dict:
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": ReduceLROnPlateau(optimizer=optimizer, factor=0.5, patience=20, threshold=0.01, threshold_mode='rel', min_lr=1e-5),
+                "interval": "epoch",
+                "frequency": 1,
+                "monitor": "val/MSE",
+                "strict": True,
+                "name": None,
+            }
+        }
 
 
 @hydra.main(version_base=None, config_path=str(CONFIG_PATH), config_name="experiments")
@@ -316,7 +329,10 @@ def main(cfg: DictConfig):
         num_layers=cfg.training.num_layers,
         num_mlp_layers=cfg.training.num_mlp_layers,
         learning_rate=cfg.training.learning_rate,
+        power_flow_multiplier=cfg.training.power_flow_multiplier
     )
+
+    learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
 
     trainer = Trainer(
         deterministic=True,
@@ -324,6 +340,7 @@ def main(cfg: DictConfig):
         max_epochs=cfg.training.epochs,
         gradient_clip_val=cfg.training.gradient_clip_val,
         logger=wandb_logger,
+        callbacks=[learning_rate_monitor]
     )
 
     trainer.fit(model, opf_data)
