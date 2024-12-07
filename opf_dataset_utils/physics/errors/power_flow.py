@@ -7,12 +7,13 @@ from torch_geometric.data import HeteroData
 from opf_dataset_utils.enumerations import (
     EdgeIndexIndices,
     EdgeTypes,
-    GridLoadIndices,
     GridShuntIndices,
     NodeTypes,
-    SolutionGeneratorIndices,
 )
-from opf_dataset_utils.physics.power import calculate_branch_powers
+from opf_dataset_utils.physics.power import (
+    calculate_branch_powers,
+    calculate_bus_powers,
+)
 from opf_dataset_utils.physics.utils import aggregate_bus_level
 from opf_dataset_utils.physics.voltage import get_voltages_magnitudes
 
@@ -35,31 +36,13 @@ def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
     num_buses = data.x_dict[NodeTypes.BUS].shape[0]
 
     # generator, load and shunt power at the bus
-    Sg = (
-        predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER]
-        + 1j * predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER]
-    )
-    Sd = (
-        data.x_dict[NodeTypes.LOAD][:, GridLoadIndices.ACTIVE_POWER]
-        + 1j * data.x_dict[NodeTypes.LOAD][:, GridLoadIndices.REACTIVE_POWER]
-    )
+    S_bus = calculate_bus_powers(data, predictions)
+
     Ysh = (
         data.x_dict[NodeTypes.SHUNT][:, GridShuntIndices.CONDUCTANCE]
         + 1j * data.x_dict[NodeTypes.SHUNT][:, GridShuntIndices.SUSCEPTANCE]
     )
 
-    Sg_bus = aggregate_bus_level(
-        num_buses,
-        index=data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.GENERATOR_LINK, NodeTypes.GENERATOR)][
-            EdgeIndexIndices.FROM
-        ],
-        src=Sg,
-    )
-    Sd_bus = aggregate_bus_level(
-        num_buses,
-        index=data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.LOAD_LINK, NodeTypes.LOAD)][EdgeIndexIndices.FROM],
-        src=Sd,
-    )
     Ysh_bus = aggregate_bus_level(
         num_buses,
         index=data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.SHUNT_LINK, NodeTypes.SHUNT)][EdgeIndexIndices.FROM],
@@ -82,4 +65,4 @@ def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
     S_t_to_bus = aggregate_bus_level(num_buses, index=transformer_edge_index[EdgeIndexIndices.TO], src=S_t_to)
 
     # conservation of power/energy
-    return Sg_bus - Sd_bus - Ssh_bus - (S_ac_from_bus + S_ac_to_bus + S_t_from_bus + S_t_to_bus)
+    return S_bus - Ssh_bus - (S_ac_from_bus + S_ac_to_bus + S_t_from_bus + S_t_to_bus)
