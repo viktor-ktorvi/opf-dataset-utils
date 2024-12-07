@@ -15,6 +15,7 @@ import wandb
 from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.enumerations import NodeTypes
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.physics.power import calculate_bus_powers
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
@@ -121,7 +122,9 @@ class ExampleModel(LightningModule):
             split: getattr(self, f"{split}_mean_abs_power_flow_error") for split in Split
         }
 
-        # TODO power metrics (apparent power of all nodes averaged) (same unit as power flow error)
+        for split in Split:
+            setattr(self, f"{split}_mean_apparent_power", MeanMetric())
+        self.mean_apparent_powers = {split: getattr(self, f"{split}_mean_apparent_power") for split in Split}
 
         # R2 score
         for split in Split:
@@ -200,6 +203,7 @@ class ExampleModel(LightningModule):
         baseMVA = batch.x[batch.batch_dict[NodeTypes.BUS]]
         abs_power_flow_errors_kVA = abs_power_flow_errors_pu * baseMVA * 1e3
 
+        # TODO do the names of the metrics need to be with underscores?
         self.mean_abs_power_flow_errors[split](abs_power_flow_errors_kVA)
         self.log(
             f"{split}/MAPFE_kVA",
@@ -209,6 +213,21 @@ class ExampleModel(LightningModule):
             prog_bar=True,
             logger=True,
         )
+
+        apparent_powers_kVA = calculate_bus_powers(batch, pred_dict).abs() * baseMVA * 1e3
+        self.mean_apparent_powers[split](apparent_powers_kVA)
+        self.log(
+            f"{split}/mean_apparent_power_kVA",
+            self.mean_apparent_powers[split],
+            on_step=on_step,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
+
+        # TODO divide abs_power_flow_errors_kVA by apparent_powers_kVA and log a mean metric
+        #  either exclude divisions by zero
+        #  or add an epsilon factor (I think this is more common)
 
     def _shared_eval(self, batch, split: str):
         pred_dict = self(batch.x_dict, batch.edge_index_dict, batch.edge_attr_dict)
