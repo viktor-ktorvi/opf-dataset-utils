@@ -57,13 +57,14 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-            self,
-            data_module: OPFDataModule,
-            hidden_channels: int,
-            num_layers: int,
-            num_mlp_layers: int,
-            learning_rate: float,
-            power_flow_multiplier: float
+        self,
+        data_module: OPFDataModule,
+        hidden_channels: int,
+        num_layers: int,
+        num_mlp_layers: int,
+        learning_rate: float,
+        power_flow_multiplier: float,
+        heads: int,
     ):
         super().__init__()
 
@@ -89,7 +90,6 @@ class ExampleModel(LightningModule):
             num_layers=num_mlp_layers,
         )
 
-        # TODO more attention heads
         self.gnn = to_hetero(
             GAT(
                 in_channels=hidden_channels,
@@ -100,6 +100,7 @@ class ExampleModel(LightningModule):
                 add_self_loops=False,
                 jk="cat",
                 v2=True,
+                heads=heads,
             ),
             example_batch.metadata(),
         )
@@ -146,10 +147,10 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-            self,
-            x_dict: dict[str, Tensor],
-            edge_index_dict: dict[tuple[str, str, str], LongTensor],
-            edge_attr_dict: dict[tuple[str, str, str], Tensor],
+        self,
+        x_dict: dict[str, Tensor],
+        edge_index_dict: dict[tuple[str, str, str], LongTensor],
+        edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
@@ -167,13 +168,13 @@ class ExampleModel(LightningModule):
         return torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()
 
     def _log_metrics(
-            self,
-            split: str,
-            batch,
-            pred_dict: dict[str, Tensor],
-            mse: Tensor,
-            loss: Tensor,
-            abs_apparent_power_flow_errors_pu: Tensor,
+        self,
+        split: str,
+        batch,
+        pred_dict: dict[str, Tensor],
+        mse: Tensor,
+        loss: Tensor,
+        abs_apparent_power_flow_errors_pu: Tensor,
     ):
         on_step = True if split == Split.TRAIN else False
         self.log(
@@ -235,7 +236,7 @@ class ExampleModel(LightningModule):
 
         mask = apparent_powers_kVA > 0  # some buses can be exactly zero; this prevents divisions by zero
         relative_abs_power_flow_error_percentage = (
-                abs_apparent_power_flow_errors_kVA[mask] / apparent_powers_kVA[mask] * 100
+            abs_apparent_power_flow_errors_kVA[mask] / apparent_powers_kVA[mask] * 100
         )
 
         self.mean_relative_abs_power_flow_errors[split](relative_abs_power_flow_error_percentage)
@@ -274,13 +275,15 @@ class ExampleModel(LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(optimizer=optimizer, factor=0.5, patience=20, threshold=0.01, threshold_mode='rel', min_lr=1e-5),
+                "scheduler": ReduceLROnPlateau(
+                    optimizer=optimizer, factor=0.5, patience=20, threshold=0.01, threshold_mode="rel", min_lr=1e-5
+                ),
                 "interval": "epoch",
                 "frequency": 1,
                 "monitor": "val/MSE",
                 "strict": True,
                 "name": None,
-            }
+            },
         }
 
 
@@ -329,7 +332,8 @@ def main(cfg: DictConfig):
         num_layers=cfg.training.num_layers,
         num_mlp_layers=cfg.training.num_mlp_layers,
         learning_rate=cfg.training.learning_rate,
-        power_flow_multiplier=cfg.training.power_flow_multiplier
+        power_flow_multiplier=cfg.training.power_flow_multiplier,
+        heads=cfg.training.heads,
     )
 
     learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
@@ -340,7 +344,7 @@ def main(cfg: DictConfig):
         max_epochs=cfg.training.epochs,
         gradient_clip_val=cfg.training.gradient_clip_val,
         logger=wandb_logger,
-        callbacks=[learning_rate_monitor]
+        callbacks=[learning_rate_monitor],
     )
 
     trainer.fit(model, opf_data)

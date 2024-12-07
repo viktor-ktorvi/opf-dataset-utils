@@ -2,9 +2,11 @@ accelerator: gpu
 
 batch_size: 128
 
-epochs: 10
+epochs: 100
 
 gradient_clip_val: 1.0
+
+heads: 32
 
 hidden_channels: 128
 
