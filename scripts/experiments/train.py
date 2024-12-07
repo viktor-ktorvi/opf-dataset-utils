@@ -113,15 +113,22 @@ class ExampleModel(LightningModule):
 
         # TODO scheduler
 
-        # metrics (must be object properties)
-
-        # power flow
+        # metrics (must be object properties)   TODO I don't like all the boilerplate... could do something with torchmetrics
+        # absolute power flow error
         for split in Split:
             setattr(self, f"{split}_mean_abs_power_flow_error", MeanMetric())
         self.mean_abs_power_flow_errors = {
             split: getattr(self, f"{split}_mean_abs_power_flow_error") for split in Split
         }
 
+        # relative power flow error
+        for split in Split:
+            setattr(self, f"{split}_mean_relative_abs_power_flow_error", MeanMetric())
+        self.mean_relative_abs_power_flow_errors = {
+            split: getattr(self, f"{split}_mean_relative_abs_power_flow_error") for split in Split
+        }
+
+        # apparent power
         for split in Split:
             setattr(self, f"{split}_mean_apparent_power", MeanMetric())
         self.mean_apparent_powers = {split: getattr(self, f"{split}_mean_apparent_power") for split in Split}
@@ -164,7 +171,7 @@ class ExampleModel(LightningModule):
         pred_dict: dict[str, Tensor],
         mse: Tensor,
         loss: Tensor,
-        abs_power_flow_errors_pu: Tensor,
+        abs_apparent_power_flow_errors_pu: Tensor,
     ):
         on_step = True if split == Split.TRAIN else False
         self.log(
@@ -198,15 +205,14 @@ class ExampleModel(LightningModule):
                 logger=True,
             )
 
-        # power flow
+        # power flow errors
         # convert to kVA for better interpretability
         baseMVA = batch.x[batch.batch_dict[NodeTypes.BUS]]
-        abs_power_flow_errors_kVA = abs_power_flow_errors_pu * baseMVA * 1e3
+        abs_apparent_power_flow_errors_kVA = abs_apparent_power_flow_errors_pu * baseMVA * 1e3
 
-        # TODO do the names of the metrics need to be with underscores?
-        self.mean_abs_power_flow_errors[split](abs_power_flow_errors_kVA)
+        self.mean_abs_power_flow_errors[split](abs_apparent_power_flow_errors_kVA)
         self.log(
-            f"{split}/MAPFE_kVA",
+            f"{split}/mean absolute apparent power flow error [kVA]",
             self.mean_abs_power_flow_errors[split],
             on_step=on_step,
             on_epoch=True,
@@ -217,7 +223,7 @@ class ExampleModel(LightningModule):
         apparent_powers_kVA = calculate_bus_powers(batch, pred_dict).abs() * baseMVA * 1e3
         self.mean_apparent_powers[split](apparent_powers_kVA)
         self.log(
-            f"{split}/mean_apparent_power_kVA",
+            f"{split}/mean apparent power [kVA]",
             self.mean_apparent_powers[split],
             on_step=on_step,
             on_epoch=True,
@@ -225,9 +231,20 @@ class ExampleModel(LightningModule):
             logger=True,
         )
 
-        # TODO divide abs_power_flow_errors_kVA by apparent_powers_kVA and log a mean metric
-        #  either exclude divisions by zero
-        #  or add an epsilon factor (I think this is more common)
+        mask = apparent_powers_kVA > 0  # some buses can be exactly zero; this prevents divisions by zero
+        relative_abs_power_flow_error_percentage = (
+            abs_apparent_power_flow_errors_kVA[mask] / apparent_powers_kVA[mask] * 100
+        )
+
+        self.mean_relative_abs_power_flow_errors[split](relative_abs_power_flow_error_percentage)
+        self.log(
+            f"{split}/relative power flow errors [%]",
+            self.mean_relative_abs_power_flow_errors[split],
+            on_step=on_step,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
 
     def _shared_eval(self, batch, split: str):
         pred_dict = self(batch.x_dict, batch.edge_index_dict, batch.edge_attr_dict)
