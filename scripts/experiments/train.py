@@ -11,15 +11,12 @@ from torch import LongTensor, Tensor, nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import GAT, to_hetero
-from torchmetrics import MeanMetric, Metric, R2Score, MetricCollection
+from torchmetrics import Metric, MetricCollection, R2Score
 
 import wandb
 from opf_dataset_utils import CONFIG_PATH
-from opf_dataset_utils.enumerations import NodeTypes
-from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
 from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.physics.metrics.power_flow import PowerTypes, AbsolutePowerFlowError
-from opf_dataset_utils.physics.power import calculate_bus_powers
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
