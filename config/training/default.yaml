@@ -16,4 +16,4 @@ num_layers: 6
 
 num_mlp_layers: 0
 
-power_flow_multiplier: 1.0
+power_flow_multiplier: 1.0e-5 # 1.0 works well when power is in per-unit

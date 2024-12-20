@@ -11,12 +11,14 @@ from torch import LongTensor, Tensor, nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import GAT, to_hetero
-from torchmetrics import MeanMetric, Metric, R2Score
+from torchmetrics import MeanMetric, Metric, R2Score, MetricCollection
 
 import wandb
 from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.enumerations import NodeTypes
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
+from opf_dataset_utils.physics.metrics.power_flow import PowerTypes, AbsolutePowerFlowError
 from opf_dataset_utils.physics.power import calculate_bus_powers
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
@@ -27,6 +29,15 @@ class Split(StrEnum):
     TRAIN = "train"
     VALIDATION = "val"
     TEST = "test"
+
+
+def create_opf_metrics(split: str) -> MetricCollection:
+    metric_dict = {}
+    for aggr in AggregationTypes:
+        for power_type in PowerTypes:
+            metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = AbsolutePowerFlowError(aggr=aggr, power_type=power_type, unit="kilo")
+
+    return MetricCollection(metric_dict)
 
 
 class ExampleModel(LightningModule):
@@ -57,14 +68,14 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-        self,
-        data_module: OPFDataModule,
-        hidden_channels: int,
-        num_layers: int,
-        num_mlp_layers: int,
-        learning_rate: float,
-        power_flow_multiplier: float,
-        heads: int,
+            self,
+            data_module: OPFDataModule,
+            hidden_channels: int,
+            num_layers: int,
+            num_mlp_layers: int,
+            learning_rate: float,
+            power_flow_multiplier: float,
+            heads: int,
     ):
         super().__init__()
 
@@ -116,30 +127,23 @@ class ExampleModel(LightningModule):
         with torch.no_grad():
             self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
 
-        # metrics (must be object properties)   TODO I don't like all the boilerplate... could do something with torchmetrics
-        # absolute power flow error
-        for split in Split:
-            setattr(self, f"{split}_mean_abs_power_flow_error", MeanMetric())
-        self.mean_abs_power_flow_errors = {
-            split: getattr(self, f"{split}_mean_abs_power_flow_error") for split in Split
-        }
+        # TODO metrics for:
+        #  powers
+        #  relative power flow errors
+        #  inequality constraints
 
-        # relative power flow error
+        # metrics (each has to be an attribute of the model class)
         for split in Split:
-            setattr(self, f"{split}_mean_relative_abs_power_flow_error", MeanMetric())
-        self.mean_relative_abs_power_flow_errors = {
-            split: getattr(self, f"{split}_mean_relative_abs_power_flow_error") for split in Split
-        }
+            # OPF related metrics
+            setattr(self, f"{split}_opf_metrics", create_opf_metrics(split))
 
-        # apparent power
-        for split in Split:
-            setattr(self, f"{split}_mean_apparent_power", MeanMetric())
-        self.mean_apparent_powers = {split: getattr(self, f"{split}_mean_apparent_power") for split in Split}
-
-        # R2 score
-        for split in Split:
+            # R2 score
             for node_type in example_batch.y_dict:
                 setattr(self, f"{split}_{node_type}_r2", R2Score(num_outputs=example_batch.y_dict[node_type].shape[-1]))
+
+        self.opf_metrics = {
+            split: getattr(self, f"{split}_opf_metrics") for split in Split
+        }
 
         self.r2_scores = {
             split: {node_type: getattr(self, f"{split}_{node_type}_r2") for node_type in example_batch.y_dict}
@@ -147,11 +151,12 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-        self,
-        x_dict: dict[str, Tensor],
-        edge_index_dict: dict[tuple[str, str, str], LongTensor],
-        edge_attr_dict: dict[tuple[str, str, str], Tensor],
+            self,
+            x_dict: dict[str, Tensor],
+            edge_index_dict: dict[tuple[str, str, str], LongTensor],
+            edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
+
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
 
@@ -167,97 +172,28 @@ class ExampleModel(LightningModule):
         y_dict_scaled = self.out_scaler.scale(y_dict)
         return torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()
 
-    def _log_metrics(
-        self,
-        split: str,
-        batch,
-        pred_dict: dict[str, Tensor],
-        mse: Tensor,
-        loss: Tensor,
-        abs_apparent_power_flow_errors_pu: Tensor,
-    ):
-        on_step = True if split == Split.TRAIN else False
-        self.log(
-            f"{split}/MSE",
-            mse,
-            on_step=on_step,
-            on_epoch=True,
-            prog_bar=False,
-            logger=True,
-            batch_size=batch.batch_size,
-        )
-        self.log(
-            f"{split}/loss",
-            loss,
-            on_step=on_step,
-            on_epoch=True,
-            prog_bar=False,
-            logger=True,
-            batch_size=batch.batch_size,
-        )
-
-        # r2 score
-        for node_type in batch.y_dict:
-            self.r2_scores[split][node_type](pred_dict[node_type], batch.y_dict[node_type])
-            self.log(
-                f"{split}/{node_type}_r2",
-                self.r2_scores[split][node_type],
-                on_step=False,
-                on_epoch=True,
-                prog_bar=True,
-                logger=True,
-            )
-
-        # power flow errors
-        # convert to kVA for better interpretability
-        baseMVA = batch.x[batch.batch_dict[NodeTypes.BUS]]
-        abs_apparent_power_flow_errors_kVA = abs_apparent_power_flow_errors_pu * baseMVA * 1e3
-
-        self.mean_abs_power_flow_errors[split](abs_apparent_power_flow_errors_kVA)
-        self.log(
-            f"{split}/mean absolute apparent power flow error [kVA]",
-            self.mean_abs_power_flow_errors[split],
-            on_step=on_step,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-        )
-
-        apparent_powers_kVA = calculate_bus_powers(batch, pred_dict).abs() * baseMVA * 1e3
-        self.mean_apparent_powers[split](apparent_powers_kVA)
-        self.log(
-            f"{split}/mean apparent power [kVA]",
-            self.mean_apparent_powers[split],
-            on_step=on_step,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-        )
-
-        mask = apparent_powers_kVA > 0  # some buses can be exactly zero; this prevents divisions by zero
-        relative_abs_power_flow_error_percentage = (
-            abs_apparent_power_flow_errors_kVA[mask] / apparent_powers_kVA[mask] * 100
-        )
-
-        self.mean_relative_abs_power_flow_errors[split](relative_abs_power_flow_error_percentage)
-        self.log(
-            f"{split}/relative power flow errors [%]",
-            self.mean_relative_abs_power_flow_errors[split],
-            on_step=on_step,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-        )
-
     def _shared_eval(self, batch, split: str):
+        logging_kwargs = dict(on_step=True, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.batch_size)
+
+        # predict
         pred_dict = self(batch.x_dict, batch.edge_index_dict, batch.edge_attr_dict)
 
-        abs_power_flow_errors_pu = calculate_power_flow_errors(batch, pred_dict).abs()
-
+        # calculate loss
         mse = self._calculate_loss(pred_dict, batch.y_dict)
-        loss = mse + self.power_flow_multiplier * abs_power_flow_errors_pu.mean()
+        opf_metrics: dict[str, Tensor] = self.opf_metrics[split](batch, pred_dict)
+        apparent_power_flow_error = opf_metrics[f"{split}/{AggregationTypes.MEAN} absolute {PowerTypes.APPARENT} power flow error [kVA]"]
 
-        self._log_metrics(split, batch, pred_dict, mse, loss, abs_power_flow_errors_pu)
+        loss = mse + self.power_flow_multiplier * apparent_power_flow_error
+
+        # log metrics
+        self.log(f"{split}/MSE", mse, **logging_kwargs)
+        self.log(f"{split}/loss", loss, **logging_kwargs)
+        self.log_dict(opf_metrics, **logging_kwargs)
+
+        for node_type in batch.y_dict:
+            # r2 score
+            self.r2_scores[split][node_type](pred_dict[node_type], batch.y_dict[node_type])
+            self.log(f"{split}/{node_type}_r2", self.r2_scores[split][node_type], **logging_kwargs)
 
         return loss
 
