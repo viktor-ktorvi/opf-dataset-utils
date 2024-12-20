@@ -17,7 +17,7 @@ import wandb
 from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.physics.metrics.power import PowerTypes, Power
-from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError
+from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError, RelativePowerFlowError
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
@@ -34,6 +34,7 @@ def create_opf_metrics(split: str) -> MetricCollection:
     for aggr in AggregationTypes:
         for power_type in PowerTypes:
             metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = AbsolutePowerFlowError(aggr=aggr, power_type=power_type, unit="kilo")
+            metric_dict[f"{split}/{aggr} relative {power_type} power flow error [%]"] = RelativePowerFlowError(aggr=aggr, power_type=power_type)
             metric_dict[f"{split}/{aggr} {power_type} power [kVA]"] = Power(aggr=aggr, power_type=power_type, unit="kilo")
 
     return MetricCollection(metric_dict)
@@ -127,8 +128,9 @@ class ExampleModel(LightningModule):
             self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
 
         # TODO metrics for:
-        #  relative power flow errors
-        #  inequality constraints
+        #  inequality constraints -- absolute and relative (divided by the range?)
+        #  optimality gap (costs)
+        #  thresholded relative mean-absolute error (TRMAE)? (maybe threshold or maybe just ignore zeros) (for Pg, Qg, Sg?, vm, va, Sf?, St?)
 
         # metrics (each has to be an attribute of the model class)
         for split in Split:
