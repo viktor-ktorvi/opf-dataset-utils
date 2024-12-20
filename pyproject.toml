@@ -11,6 +11,7 @@ python = ">=3.10,<3.12"
 matplotlib = "^3.9.0"
 numpy = "1.26.0"
 pydot = "^3.0.2"
+torchmetrics = "^1.6.0"
 [tool.poetry.group.dev]
 optional = true
 

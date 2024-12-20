@@ -48,7 +48,6 @@ def calculate_power_type(complex_powers: Tensor, power_type: str) -> Tensor:
     raise ValueError(f"Power type '{power_type}' is not supported. Expected one of {[str(pt) for pt in PowerTypes]}")
 
 
-# TODO 'docs' in readme; actually trying it in experiments (new branch)
 class AbsolutePowerFlowError(AggregatorMetric):
     """
     An absolute power flow error metric with specifiable aggregation, power type, and unit.
@@ -70,7 +69,6 @@ class AbsolutePowerFlowError(AggregatorMetric):
         self.power_type = power_type
         self.unit = unit
         self.add_state("complex_power_flow_errors", default=torch.tensor(0.0), dist_reduce_fx="sum")
-
 
     def update(self, batch: HeteroData, predictions: dict[str, Tensor]):
         self.complex_power_flow_errors = calculate_power_flow_errors(batch, predictions)

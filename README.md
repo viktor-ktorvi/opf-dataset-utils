@@ -13,6 +13,7 @@ We implement:
     * Branch powers
     * Costs
     * Inequalities
+* OPF specific [TorchMetrics](https://lightning.ai/docs/torchmetrics/stable/) metrics
 * Data visualization
 * Enums for indexing the OPFData JSON format
 * And more...
@@ -69,18 +70,33 @@ See [scripts/power_flow_errors.py](scripts/power_flow_errors.py) for a full exam
 
 ```python
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError
 
 with torch.no_grad():
     untrained_predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
 
+# calculate errors
 mean_abs_errors_solution = calculate_power_flow_errors(batch, batch.y_dict).abs().mean()
 mean_abs_errors_untrained = calculate_power_flow_errors(batch, untrained_predictions).abs().mean()
+
+# create torchmetrics Metrics
+mean_apparent_pu_metric = AbsolutePowerFlowError(aggr="mean", power_type="apparent", unit="per-unit")
+max_active_mega_metric = AbsolutePowerFlowError(aggr="max", power_type="active", unit="mega")
+min_reactive_kilo_metric = AbsolutePowerFlowError(aggr="min", power_type="reactive", unit="kilo")
+
+# update metrics
+mean_apparent_pu_metric(batch, untrained_predictions)
+max_active_mega_metric(batch, untrained_predictions)
+min_reactive_kilo_metric(batch, untrained_predictions)
+# ...
 ```
 Example results:
 ```
 Mean power flow errors:
 	Solution: 1.28563e-06 [p.u.]
 	Untrained model prediction: 413350.84375 [p.u.]
+
+...
 ```
 
 #### Costs
