@@ -57,10 +57,10 @@ class VoltageMagnitudeInequalityError(AggregatorMetric):
     def update(self, batch: HeteroData, predictions: dict[str, Tensor]):
         errors_pu = None
         if self.bound_type == BoundTypes.UPPER:
-            errors_pu = calculate_upper_voltage_magnitude_errors(batch, predictions)
+            errors_pu = calculate_upper_voltage_magnitude_errors(batch, predictions).abs()
 
         if self.bound_type == BoundTypes.LOWER:
-            errors_pu = calculate_lower_voltage_magnitude_errors(batch, predictions)
+            errors_pu = calculate_lower_voltage_magnitude_errors(batch, predictions).abs()
 
         if self.value_type == ValueTypes.ABSOLUTE:
             base_kV = batch.x_dict[NodeTypes.BUS][:, GridBusIndices.BASE_KV]
@@ -113,14 +113,14 @@ class VoltageAngleDifferenceInequalityError(AggregatorMetric):
             errors_transformer_rad = calculate_upper_voltage_angle_difference_errors(
                 batch, predictions, EdgeTypes.TRANSFORMER
             )
-            errors_rad = torch.cat((errors_ac_line_rad, errors_transformer_rad))
+            errors_rad = torch.cat((errors_ac_line_rad, errors_transformer_rad)).abs()
 
         if self.bound_type == BoundTypes.LOWER:
             errors_ac_line_rad = calculate_lower_voltage_angle_difference_errors(batch, predictions, EdgeTypes.AC_LINE)
             errors_transformer_rad = calculate_lower_voltage_angle_difference_errors(
                 batch, predictions, EdgeTypes.TRANSFORMER
             )
-            errors_rad = torch.cat((errors_ac_line_rad, errors_transformer_rad))
+            errors_rad = torch.cat((errors_ac_line_rad, errors_transformer_rad)).abs()
 
         if self.value_type == ValueTypes.ABSOLUTE:
             if self.unit == AngleUnits.RADIAN:
