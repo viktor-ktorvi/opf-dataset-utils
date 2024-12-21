@@ -16,6 +16,7 @@ from torchmetrics import Metric, MetricCollection, R2Score
 import wandb
 from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
+from opf_dataset_utils.physics.metrics.cost import OptimalityGap
 from opf_dataset_utils.physics.metrics.power import PowerTypes, Power
 from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError, RelativePowerFlowError
 from scripts.experiments.utils.data import OPFDataModule
@@ -36,7 +37,7 @@ def create_opf_metrics(split: str) -> MetricCollection:
             metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = AbsolutePowerFlowError(aggr=aggr, power_type=power_type, unit="kilo")
             metric_dict[f"{split}/{aggr} relative {power_type} power flow error [%]"] = RelativePowerFlowError(aggr=aggr, power_type=power_type)
             metric_dict[f"{split}/{aggr} {power_type} power [kVA]"] = Power(aggr=aggr, power_type=power_type, unit="kilo")
-
+            metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
     return MetricCollection(metric_dict)
 
 
