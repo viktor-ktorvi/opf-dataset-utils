@@ -17,6 +17,11 @@ import wandb
 from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.physics.metrics.cost import OptimalityGap
+from opf_dataset_utils.physics.metrics.inequality.bound_types import BoundTypes
+from opf_dataset_utils.physics.metrics.inequality.voltage import (
+    VoltageAngleDifferenceInequalityError,
+    VoltageMagnitudeInequalityError,
+)
 from opf_dataset_utils.physics.metrics.power import Power, PowerTypes
 from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
 from scripts.experiments.utils.data import OPFDataModule
@@ -44,6 +49,24 @@ def create_opf_metrics(split: str) -> MetricCollection:
                 aggr=aggr, power_type=power_type, unit="kilo"
             )
             metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
+
+            for bound_type in BoundTypes:
+                metric_dict[
+                    f"{split}/{aggr} absolute {bound_type} voltage magnitude inequality error [per-unit]"
+                ] = VoltageMagnitudeInequalityError(aggr=aggr, bound_type=bound_type, value_type="absolute")
+                metric_dict[
+                    f"{split}/{aggr} relative {bound_type} voltage magnitude inequality error [%]"
+                ] = VoltageMagnitudeInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
+
+                metric_dict[
+                    f"{split}/{aggr} absolute {bound_type} voltage angle difference error [deg]"
+                ] = VoltageAngleDifferenceInequalityError(
+                    aggr=aggr, bound_type=bound_type, value_type="absolute", unit="degree"
+                )
+                metric_dict[
+                    f"{split}/{aggr} relative {bound_type} voltage angle difference error [%]"
+                ] = VoltageAngleDifferenceInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
+
     return MetricCollection(metric_dict)
 
 
@@ -136,7 +159,6 @@ class ExampleModel(LightningModule):
 
         # TODO metrics for:
         #  inequality constraints -- absolute and relative (divided by the range?)
-        #  optimality gap (costs)
         #  thresholded relative mean-absolute error (TRMAE)? (maybe threshold or maybe just ignore zeros) (for Pg, Qg, Sg?, vm, va, Sf?, St?)
 
         # metrics (each has to be an attribute of the model class)
