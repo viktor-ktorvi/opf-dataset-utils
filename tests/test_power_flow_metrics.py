@@ -6,10 +6,7 @@ from torch_geometric.loader import DataLoader
 
 from opf_dataset_utils.enumerations import NodeTypes
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
-from opf_dataset_utils.physics.metrics.power_flow import (
-    AbsolutePowerFlowError,
-    RelativePowerFlowError,
-)
+from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
 from opf_dataset_utils.physics.power import calculate_bus_powers
 from tests.utils import setup_test
 
@@ -36,13 +33,15 @@ class TestPowerFlowMetrics(TestCase):
         -------
 
         """
-        mean_apparent_pu_metric = AbsolutePowerFlowError(aggr="mean", power_type="apparent", unit="per-unit").to(
+        mean_apparent_pu_metric = PowerFlowError(
+            aggr="mean", power_type="apparent", value_type="absolute", unit="per-unit"
+        ).to(self.device)
+        max_active_mega_metric = PowerFlowError(aggr="max", power_type="active", value_type="absolute", unit="mega").to(
             self.device
         )
-        max_active_mega_metric = AbsolutePowerFlowError(aggr="max", power_type="active", unit="mega").to(self.device)
-        min_reactive_kilo_metric = AbsolutePowerFlowError(aggr="min", power_type="reactive", unit="kilo").to(
-            self.device
-        )
+        min_reactive_kilo_metric = PowerFlowError(
+            aggr="min", power_type="reactive", value_type="absolute", unit="kilo"
+        ).to(self.device)
 
         for loader in self.loaders:
             error_values = []
@@ -74,9 +73,9 @@ class TestPowerFlowMetrics(TestCase):
         -------
 
         """
-        mean_apparent_metric = RelativePowerFlowError(aggr="mean", power_type="apparent").to(self.device)
-        max_active_metric = RelativePowerFlowError(aggr="max", power_type="active").to(self.device)
-        min_reactive_metric = RelativePowerFlowError(aggr="min", power_type="reactive").to(self.device)
+        mean_apparent_metric = PowerFlowError(aggr="mean", power_type="apparent", value_type="relative").to(self.device)
+        max_active_metric = PowerFlowError(aggr="max", power_type="active", value_type="relative").to(self.device)
+        min_reactive_metric = PowerFlowError(aggr="min", power_type="reactive", value_type="relative").to(self.device)
 
         for loader in self.loaders:
             abs_error_values = []

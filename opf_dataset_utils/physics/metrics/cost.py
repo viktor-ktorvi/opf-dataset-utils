@@ -4,8 +4,9 @@ import torch
 from torch import Tensor
 from torch_geometric.data import HeteroData
 
-from opf_dataset_utils.costs import calculate_costs_per_generator, calculate_costs_per_grid
+from opf_dataset_utils.costs import calculate_costs_per_grid
 from opf_dataset_utils.physics.metrics.aggregation import AggregatorMetric
+from opf_dataset_utils.physics.metrics.relative_values import calculate_relative_values
 
 
 class OptimalityGap(AggregatorMetric):
@@ -31,12 +32,8 @@ class OptimalityGap(AggregatorMetric):
         self.costs_per_grid = calculate_costs_per_grid(batch, predictions)
         self.target_costs_per_grid = calculate_costs_per_grid(batch, batch.y_dict)
 
-        mask = self.target_costs_per_grid.abs() > 0
-
-        costs = self.costs_per_grid[mask]
-        target_costs = self.target_costs_per_grid[mask]
-
-        optimality_gap = (costs - target_costs) / target_costs
-        optimality_gap = optimality_gap.abs() * 100.0
+        optimality_gap = calculate_relative_values(
+            self.costs_per_grid - self.target_costs_per_grid, self.target_costs_per_grid
+        )
 
         super().update(optimality_gap)
