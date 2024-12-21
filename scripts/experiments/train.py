@@ -38,6 +38,8 @@ class Split(StrEnum):
 def create_opf_metrics(split: str) -> MetricCollection:
     metric_dict = {}
     for aggr in AggregationTypes:
+        metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
+
         for power_type in PowerTypes:
             metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = PowerFlowError(
                 aggr=aggr, power_type=power_type, unit="kilo", value_type="absolute"
@@ -48,24 +50,23 @@ def create_opf_metrics(split: str) -> MetricCollection:
             metric_dict[f"{split}/{aggr} {power_type} power [kVA]"] = Power(
                 aggr=aggr, power_type=power_type, unit="kilo"
             )
-            metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
 
-            for bound_type in BoundTypes:
-                metric_dict[
-                    f"{split}/{aggr} absolute {bound_type} voltage magnitude inequality error [per-unit]"
-                ] = VoltageMagnitudeInequalityError(aggr=aggr, bound_type=bound_type, value_type="absolute")
-                metric_dict[
-                    f"{split}/{aggr} relative {bound_type} voltage magnitude inequality error [%]"
-                ] = VoltageMagnitudeInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
+        for bound_type in BoundTypes:
+            metric_dict[
+                f"{split}/{aggr} absolute {bound_type} voltage magnitude inequality error [per-unit]"
+            ] = VoltageMagnitudeInequalityError(aggr=aggr, bound_type=bound_type, value_type="absolute")
+            metric_dict[
+                f"{split}/{aggr} relative {bound_type} voltage magnitude inequality error [%]"
+            ] = VoltageMagnitudeInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
 
-                metric_dict[
-                    f"{split}/{aggr} absolute {bound_type} voltage angle difference error [deg]"
-                ] = VoltageAngleDifferenceInequalityError(
-                    aggr=aggr, bound_type=bound_type, value_type="absolute", unit="degree"
-                )
-                metric_dict[
-                    f"{split}/{aggr} relative {bound_type} voltage angle difference error [%]"
-                ] = VoltageAngleDifferenceInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
+            metric_dict[
+                f"{split}/{aggr} absolute {bound_type} voltage angle difference error [deg]"
+            ] = VoltageAngleDifferenceInequalityError(
+                aggr=aggr, bound_type=bound_type, value_type="absolute", unit="degree"
+            )
+            metric_dict[
+                f"{split}/{aggr} relative {bound_type} voltage angle difference error [%]"
+            ] = VoltageAngleDifferenceInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
 
     return MetricCollection(metric_dict)
 
