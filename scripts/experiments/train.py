@@ -17,8 +17,8 @@ import wandb
 from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.physics.metrics.cost import OptimalityGap
-from opf_dataset_utils.physics.metrics.power import PowerTypes, Power
-from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError, RelativePowerFlowError
+from opf_dataset_utils.physics.metrics.power import Power, PowerTypes
+from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
@@ -34,9 +34,15 @@ def create_opf_metrics(split: str) -> MetricCollection:
     metric_dict = {}
     for aggr in AggregationTypes:
         for power_type in PowerTypes:
-            metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = AbsolutePowerFlowError(aggr=aggr, power_type=power_type, unit="kilo")
-            metric_dict[f"{split}/{aggr} relative {power_type} power flow error [%]"] = RelativePowerFlowError(aggr=aggr, power_type=power_type)
-            metric_dict[f"{split}/{aggr} {power_type} power [kVA]"] = Power(aggr=aggr, power_type=power_type, unit="kilo")
+            metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = PowerFlowError(
+                aggr=aggr, power_type=power_type, unit="kilo", value_type="absolute"
+            )
+            metric_dict[f"{split}/{aggr} relative {power_type} power flow error [%]"] = PowerFlowError(
+                aggr=aggr, power_type=power_type, value_type="relative"
+            )
+            metric_dict[f"{split}/{aggr} {power_type} power [kVA]"] = Power(
+                aggr=aggr, power_type=power_type, unit="kilo"
+            )
             metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
     return MetricCollection(metric_dict)
 
@@ -69,14 +75,14 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-            self,
-            data_module: OPFDataModule,
-            hidden_channels: int,
-            num_layers: int,
-            num_mlp_layers: int,
-            learning_rate: float,
-            power_flow_multiplier: float,
-            heads: int,
+        self,
+        data_module: OPFDataModule,
+        hidden_channels: int,
+        num_layers: int,
+        num_mlp_layers: int,
+        learning_rate: float,
+        power_flow_multiplier: float,
+        heads: int,
     ):
         super().__init__()
 
@@ -142,9 +148,7 @@ class ExampleModel(LightningModule):
             for node_type in example_batch.y_dict:
                 setattr(self, f"{split}_{node_type}_r2", R2Score(num_outputs=example_batch.y_dict[node_type].shape[-1]))
 
-        self.opf_metrics = {
-            split: getattr(self, f"{split}_opf_metrics") for split in Split
-        }
+        self.opf_metrics = {split: getattr(self, f"{split}_opf_metrics") for split in Split}
 
         self.r2_scores = {
             split: {node_type: getattr(self, f"{split}_{node_type}_r2") for node_type in example_batch.y_dict}
@@ -152,12 +156,11 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-            self,
-            x_dict: dict[str, Tensor],
-            edge_index_dict: dict[tuple[str, str, str], LongTensor],
-            edge_attr_dict: dict[tuple[str, str, str], Tensor],
+        self,
+        x_dict: dict[str, Tensor],
+        edge_index_dict: dict[tuple[str, str, str], LongTensor],
+        edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
-
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
 
@@ -182,7 +185,9 @@ class ExampleModel(LightningModule):
         # calculate loss
         mse = self._calculate_loss(pred_dict, batch.y_dict)
         opf_metrics: dict[str, Tensor] = self.opf_metrics[split](batch, pred_dict)
-        apparent_power_flow_error = opf_metrics[f"{split}/{AggregationTypes.MEAN} absolute {PowerTypes.APPARENT} power flow error [kVA]"]
+        apparent_power_flow_error = opf_metrics[
+            f"{split}/{AggregationTypes.MEAN} absolute {PowerTypes.APPARENT} power flow error [kVA]"
+        ]
 
         loss = mse + self.power_flow_multiplier * apparent_power_flow_error
 
