@@ -70,7 +70,7 @@ See [scripts/power_flow_errors.py](scripts/power_flow_errors.py) for a full exam
 
 ```python
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
-from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError
+from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
 
 with torch.no_grad():
     untrained_predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
@@ -80,9 +80,9 @@ mean_abs_errors_solution = calculate_power_flow_errors(batch, batch.y_dict).abs(
 mean_abs_errors_untrained = calculate_power_flow_errors(batch, untrained_predictions).abs().mean()
 
 # create torchmetrics Metrics
-mean_apparent_pu_metric = AbsolutePowerFlowError(aggr="mean", power_type="apparent", unit="per-unit")
-max_active_mega_metric = AbsolutePowerFlowError(aggr="max", power_type="active", unit="mega")
-min_reactive_kilo_metric = AbsolutePowerFlowError(aggr="min", power_type="reactive", unit="kilo")
+mean_apparent_pu_metric = PowerFlowError(aggr="mean", power_type="apparent", unit="per-unit")
+max_active_mega_metric = PowerFlowError(aggr="max", power_type="active", unit="mega")
+min_reactive_kilo_metric = PowerFlowError(aggr="min", power_type="reactive", unit="kilo")
 
 # update metrics
 mean_apparent_pu_metric(batch, untrained_predictions)
