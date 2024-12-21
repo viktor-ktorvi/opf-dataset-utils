@@ -16,19 +16,14 @@ class AbsolutePowerFlowError(AggregatorMetric):
     """
     An absolute power flow error metric with specifiable aggregation, power type, and unit.
     """
+
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False
     full_state_update: bool = True
 
     complex_power_flow_errors: Tensor
 
-    def __init__(
-            self,
-            aggr: str,
-            power_type: str,
-            unit: str,
-            **kwargs
-    ):
+    def __init__(self, aggr: str, power_type: str, unit: str, **kwargs):
         super().__init__(aggr, **kwargs)
         self.power_type = power_type
         self.unit = unit
@@ -42,15 +37,15 @@ class AbsolutePowerFlowError(AggregatorMetric):
 
         baseMVA_per_bus = batch.x[batch.batch_dict[NodeTypes.BUS]]
 
-        super().update(
-            convert_unit(errors, baseMVA_per_bus, self.unit)
-        )
+        super().update(convert_unit(errors, baseMVA_per_bus, self.unit))
+
 
 class RelativePowerFlowError(AggregatorMetric):
     """
     A relative power flow error metric (expressed in percentage points %) with specifiable aggregation and power type.
     The metric disregards buses whose power is exactly equal to 0.
     """
+
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False
     full_state_update: bool = True
@@ -58,12 +53,7 @@ class RelativePowerFlowError(AggregatorMetric):
     complex_powers: Tensor
     complex_power_flow_errors: Tensor
 
-    def __init__(
-            self,
-            aggr: str,
-            power_type: str,
-            **kwargs
-    ):
+    def __init__(self, aggr: str, power_type: str, **kwargs):
         super().__init__(aggr, **kwargs)
         self.power_type = power_type
         self.add_state("complex_power_flow_errors", default=torch.tensor(0.0), dist_reduce_fx="sum")

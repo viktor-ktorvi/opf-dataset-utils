@@ -6,8 +6,8 @@ from torchmetrics import MetricCollection
 
 from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
 from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
-from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError
 from opf_dataset_utils.physics.metrics.power import PowerTypes
+from opf_dataset_utils.physics.metrics.power_flow import AbsolutePowerFlowError
 from opf_dataset_utils.physics.metrics.units import UnitTypes
 
 
@@ -54,12 +54,13 @@ def main():
     print(f"\tSolution: {mean_abs_errors_solution:.5e} [p.u.]")
     print(f"\tUntrained model prediction: {mean_abs_errors_untrained:.5f} [p.u.]")
 
-
     metric_dict = {}
     for aggr in AggregationTypes:
         for power_type in PowerTypes:
             for unit in UnitTypes:
-                metric_dict[f"{aggr} absolute {power_type} power flow error [{unit}]"] = AbsolutePowerFlowError(aggr=aggr, power_type=power_type, unit=unit)
+                metric_dict[f"{aggr} absolute {power_type} power flow error [{unit}]"] = AbsolutePowerFlowError(
+                    aggr=aggr, power_type=power_type, unit=unit
+                )
 
     metrics = MetricCollection(metric_dict).to(device)
 
