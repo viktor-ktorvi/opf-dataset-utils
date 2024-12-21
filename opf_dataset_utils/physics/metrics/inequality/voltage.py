@@ -74,7 +74,7 @@ class VoltageMagnitudeInequalityError(AggregatorMetric):
 
 
 class AngleUnits(StrEnum):
-    RADIAN = "rad"
+    RADIAN = "radian"
     DEGREE = "degree"
 
 
@@ -87,7 +87,7 @@ class VoltageAngleDifferenceInequalityError(AggregatorMetric):
     higher_is_better: Optional[bool] = False
     full_state_update: bool = True
 
-    def __init__(self, aggr: str, bound_type: str, value_type: str, unit: str = "rad", **kwargs):
+    def __init__(self, aggr: str, bound_type: str, value_type: str, unit: str = "radian", **kwargs):
         super().__init__(aggr, **kwargs)
         self.value_type = value_type
         self.bound_type = bound_type
