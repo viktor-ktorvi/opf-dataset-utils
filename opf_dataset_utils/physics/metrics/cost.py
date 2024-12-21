@@ -10,9 +10,12 @@ from opf_dataset_utils.physics.metrics.aggregation import AggregatorMetric
 
 class OptimalityGap(AggregatorMetric):
     """
-    A metric of the optimality hap between the per-generator costs of the predictions and the targets expressed in percentage points %.
+    A metric of the optimality hap between the per-generator costs of the predictions
+    and the targets expressed in percentage points % -- basically a relative cost error.
+    Excludes generators whose target cost is 0.
     """
 
+    higher_is_better: Optional[bool] = False
     is_differentiable: Optional[bool] = True
     full_state_update: bool = True
 
@@ -28,7 +31,12 @@ class OptimalityGap(AggregatorMetric):
         self.costs_per_generator = calculate_costs_per_generator(batch, predictions)
         self.target_costs_per_generator = calculate_costs_per_generator(batch, batch.y_dict)
 
-        optimality_gap = (self.costs_per_generator - self.target_costs_per_generator) / self.target_costs_per_generator
+        mask = self.target_costs_per_generator.abs() > 0
+
+        costs = self.costs_per_generator[mask]
+        target_costs = self.target_costs_per_generator[mask]
+
+        optimality_gap = (costs - target_costs) / target_costs
         optimality_gap = optimality_gap.abs() * 100.0
 
         super().update(optimality_gap)
