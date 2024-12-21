@@ -51,9 +51,15 @@ class TestPowerMetrics(TestCase):
             powers_mega = powers_pu * torch.cat(baseMVA_values)
             powers_kilo = powers_mega * 1e3
 
-            self.assertAlmostEqual(mean_apparent_pu_metric.compute().cpu().item(), powers_pu.abs().mean().item(), places=6)
-            self.assertAlmostEqual(max_active_mega_metric.compute().cpu().item(), powers_mega.real.max().item(), places=6)
-            self.assertAlmostEqual(min_reactive_kilo_metric.compute().cpu().item(), powers_kilo.imag.min().item(), places=6)
+            self.assertAlmostEqual(
+                mean_apparent_pu_metric.compute().cpu().item(), powers_pu.abs().mean().item(), places=6
+            )
+            self.assertAlmostEqual(
+                max_active_mega_metric.compute().cpu().item(), powers_mega.real.max().item(), places=6
+            )
+            self.assertAlmostEqual(
+                min_reactive_kilo_metric.compute().cpu().item(), powers_kilo.imag.min().item(), places=6
+            )
 
             mean_apparent_pu_metric.reset()
             max_active_mega_metric.reset()

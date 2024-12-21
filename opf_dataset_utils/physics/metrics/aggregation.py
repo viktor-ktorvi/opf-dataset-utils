@@ -34,7 +34,9 @@ class AggregatorMetric(Metric):
             self.add_state("num_values", default=torch.tensor(0), dist_reduce_fx="sum")
             return
 
-        raise ValueError(f"Aggregation type '{aggr}' is not supported. Expected one of {[str(a) for a in AggregationTypes]}")
+        raise ValueError(
+            f"Aggregation type '{aggr}' is not supported. Expected one of {[str(a) for a in AggregationTypes]}"
+        )
 
     def update(self, values: Tensor):
         if self.aggr == AggregationTypes.MIN:

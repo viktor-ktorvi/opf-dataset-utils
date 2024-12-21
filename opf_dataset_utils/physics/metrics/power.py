@@ -52,18 +52,13 @@ class Power(AggregatorMetric):
     """
     A metric that measures the bus-level powers in the grid.
     """
+
     is_differentiable: Optional[bool] = True
     full_state_update: bool = True
 
     complex_powers: Tensor
 
-    def __init__(
-            self,
-            aggr: str,
-            power_type: str,
-            unit: str,
-            **kwargs
-    ):
+    def __init__(self, aggr: str, power_type: str, unit: str, **kwargs):
         super().__init__(aggr, **kwargs)
         self.power_type = power_type
         self.unit = unit
@@ -75,6 +70,4 @@ class Power(AggregatorMetric):
 
         baseMVA_per_bus = batch.x[batch.batch_dict[NodeTypes.BUS]]
 
-        super().update(
-            convert_unit(powers_pu, baseMVA_per_bus, self.unit)
-        )
+        super().update(convert_unit(powers_pu, baseMVA_per_bus, self.unit))

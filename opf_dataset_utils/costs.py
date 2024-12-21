@@ -10,10 +10,6 @@ from opf_dataset_utils.enumerations import (
     SolutionGeneratorIndices,
 )
 
-# TODO not tested
-#  objective not in the data object
-#  possibly load JSON data and extract everything then test
-
 
 def calculate_costs_per_generator(data: HeteroData, predictions: Dict) -> Tensor:
     """
