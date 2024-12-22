@@ -18,6 +18,9 @@ from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.metrics.cost import OptimalityGap
 from opf_dataset_utils.metrics.inequality.bound_types import BoundTypes
+from opf_dataset_utils.metrics.inequality.generator_power import (
+    GeneratorPowerInequalityError,
+)
 from opf_dataset_utils.metrics.inequality.voltage import (
     VoltageAngleDifferenceInequalityError,
     VoltageMagnitudeInequalityError,
@@ -67,6 +70,18 @@ def create_opf_metrics(split: str) -> MetricCollection:
             metric_dict[
                 f"{split}/{aggr} relative {bound_type} voltage angle difference error [%]"
             ] = VoltageAngleDifferenceInequalityError(aggr=aggr, bound_type=bound_type, value_type="relative")
+
+            for power_type in [PowerTypes.ACTIVE, PowerTypes.REACTIVE]:
+                metric_dict[
+                    f"{split}/{aggr} absolute {bound_type} {power_type} generator power inequality error [kVA]"
+                ] = GeneratorPowerInequalityError(
+                    aggr=aggr, bound_type=bound_type, value_type="absolute", power_type=power_type, unit="kilo"
+                )
+                metric_dict[
+                    f"{split}/{aggr} relative {bound_type} {power_type} generator power inequality error [%]"
+                ] = GeneratorPowerInequalityError(
+                    aggr=aggr, bound_type=bound_type, value_type="relative", power_type=power_type
+                )
 
     return MetricCollection(metric_dict)
 
