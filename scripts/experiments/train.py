@@ -15,15 +15,15 @@ from torchmetrics import Metric, MetricCollection, R2Score
 
 import wandb
 from opf_dataset_utils import CONFIG_PATH
-from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
-from opf_dataset_utils.physics.metrics.cost import OptimalityGap
-from opf_dataset_utils.physics.metrics.inequality.bound_types import BoundTypes
-from opf_dataset_utils.physics.metrics.inequality.voltage import (
+from opf_dataset_utils.metrics.aggregation import AggregationTypes
+from opf_dataset_utils.metrics.cost import OptimalityGap
+from opf_dataset_utils.metrics.inequality.bound_types import BoundTypes
+from opf_dataset_utils.metrics.inequality.voltage import (
     VoltageAngleDifferenceInequalityError,
     VoltageMagnitudeInequalityError,
 )
-from opf_dataset_utils.physics.metrics.power import Power, PowerTypes
-from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
+from opf_dataset_utils.metrics.power import Power, PowerTypes
+from opf_dataset_utils.metrics.power_flow import PowerFlowError
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
