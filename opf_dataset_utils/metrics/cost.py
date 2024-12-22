@@ -5,8 +5,8 @@ from torch import Tensor
 from torch_geometric.data import HeteroData
 
 from opf_dataset_utils.costs import calculate_costs_per_grid
-from opf_dataset_utils.physics.metrics.aggregation import AggregatorMetric
-from opf_dataset_utils.physics.metrics.relative_values import calculate_relative_values
+from opf_dataset_utils.metrics.aggregation import AggregatorMetric
+from opf_dataset_utils.metrics.relative_values import calculate_relative_values
 
 
 class OptimalityGap(AggregatorMetric):

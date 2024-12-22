@@ -3,7 +3,7 @@ from torch_geometric.datasets import OPFDataset
 from torch_geometric.loader import DataLoader
 
 from opf_dataset_utils.enumerations import EdgeTypes
-from opf_dataset_utils.physics.power import calculate_branch_powers
+from opf_dataset_utils.power import calculate_branch_powers
 
 
 def main():

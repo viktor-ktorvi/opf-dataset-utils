@@ -4,11 +4,11 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GraphConv, to_hetero
 from torchmetrics import MetricCollection
 
-from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
-from opf_dataset_utils.physics.metrics.aggregation import AggregationTypes
-from opf_dataset_utils.physics.metrics.power import PowerTypes
-from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
-from opf_dataset_utils.physics.metrics.units import UnitTypes
+from opf_dataset_utils.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.metrics.aggregation import AggregationTypes
+from opf_dataset_utils.metrics.power import PowerTypes
+from opf_dataset_utils.metrics.power_flow import PowerFlowError
+from opf_dataset_utils.metrics.units import UnitTypes
 
 
 class Model(torch.nn.Module):
@@ -59,7 +59,7 @@ def main():
         for power_type in PowerTypes:
             for unit in UnitTypes:
                 metric_dict[f"{aggr} absolute {power_type} power flow error [{unit}]"] = PowerFlowError(
-                    aggr=aggr, power_type=power_type, unit=unit
+                    aggr=aggr, power_type=power_type, unit=unit, value_type="absolute"
                 )
 
     metrics = MetricCollection(metric_dict).to(device)

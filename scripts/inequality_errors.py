@@ -7,17 +7,17 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GraphConv, to_hetero
 
 from opf_dataset_utils.enumerations import EdgeTypes
-from opf_dataset_utils.physics.errors.inequality.branch_power import (
+from opf_dataset_utils.errors.inequality.branch_power import (
     calculate_branch_power_errors_from,
     calculate_branch_power_errors_to,
 )
-from opf_dataset_utils.physics.errors.inequality.generator_power import (
+from opf_dataset_utils.errors.inequality.generator_power import (
     calculate_lower_active_power_errors,
     calculate_lower_reactive_power_errors,
     calculate_upper_active_power_errors,
     calculate_upper_reactive_power_errors,
 )
-from opf_dataset_utils.physics.errors.inequality.voltage import (
+from opf_dataset_utils.errors.inequality.voltage import (
     calculate_lower_voltage_angle_difference_errors,
     calculate_lower_voltage_magnitude_errors,
     calculate_upper_voltage_angle_difference_errors,

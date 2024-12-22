@@ -5,8 +5,8 @@ from omegaconf import DictConfig
 from torch_geometric.loader import DataLoader
 
 from opf_dataset_utils.enumerations import NodeTypes
-from opf_dataset_utils.physics.metrics.power import Power
-from opf_dataset_utils.physics.power import calculate_bus_powers
+from opf_dataset_utils.metrics.power import Power
+from opf_dataset_utils.power import calculate_bus_powers
 from tests.utils import setup_test
 
 

@@ -10,12 +10,9 @@ from opf_dataset_utils.enumerations import (
     GridShuntIndices,
     NodeTypes,
 )
-from opf_dataset_utils.physics.power import (
-    calculate_branch_powers,
-    calculate_bus_powers,
-)
-from opf_dataset_utils.physics.utils import aggregate_bus_level
-from opf_dataset_utils.physics.voltage import get_voltages_magnitudes
+from opf_dataset_utils.power import calculate_branch_powers, calculate_bus_powers
+from opf_dataset_utils.utils import aggregate_bus_level
+from opf_dataset_utils.voltage import get_voltages_magnitudes
 
 
 def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:

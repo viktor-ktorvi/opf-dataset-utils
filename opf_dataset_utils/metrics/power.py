@@ -6,9 +6,9 @@ from torch import Tensor
 from torch_geometric.data import HeteroData
 
 from opf_dataset_utils.enumerations import NodeTypes
-from opf_dataset_utils.physics.metrics.aggregation import AggregatorMetric
-from opf_dataset_utils.physics.metrics.units import convert_unit
-from opf_dataset_utils.physics.power import calculate_bus_powers
+from opf_dataset_utils.metrics.aggregation import AggregatorMetric
+from opf_dataset_utils.metrics.units import convert_unit
+from opf_dataset_utils.power import calculate_bus_powers
 
 
 class PowerTypes(StrEnum):
