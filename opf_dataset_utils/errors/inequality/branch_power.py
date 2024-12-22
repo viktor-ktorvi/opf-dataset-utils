@@ -4,11 +4,9 @@ from torch import Tensor
 from torch_geometric.data import HeteroData
 
 from opf_dataset_utils.enumerations import NodeTypes
-from opf_dataset_utils.physics.errors.inequality.violations import (
-    calculate_upper_violations,
-)
-from opf_dataset_utils.physics.power import calculate_branch_powers
-from opf_dataset_utils.physics.utils import get_branch_type_indices
+from opf_dataset_utils.errors.inequality.violations import calculate_upper_violations
+from opf_dataset_utils.power import calculate_branch_powers
+from opf_dataset_utils.utils import get_branch_type_indices
 
 
 def calculate_branch_power_errors_from(data: HeteroData, predictions: Dict, branch_type: str) -> Tensor:

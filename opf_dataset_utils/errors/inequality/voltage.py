@@ -4,12 +4,12 @@ from torch import Tensor
 from torch_geometric.data import HeteroData
 
 from opf_dataset_utils.enumerations import GridBusIndices, NodeTypes
-from opf_dataset_utils.physics.errors.inequality.violations import (
+from opf_dataset_utils.errors.inequality.violations import (
     calculate_lower_violations,
     calculate_upper_violations,
 )
-from opf_dataset_utils.physics.utils import get_branch_type_indices
-from opf_dataset_utils.physics.voltage import (
+from opf_dataset_utils.utils import get_branch_type_indices
+from opf_dataset_utils.voltage import (
     calculate_voltage_angle_differences,
     get_voltages_magnitudes,
 )

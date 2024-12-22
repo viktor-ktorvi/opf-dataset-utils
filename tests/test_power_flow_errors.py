@@ -11,8 +11,8 @@ from opf_dataset_utils.enumerations import (
     SolutionACLineIndices,
     SolutionTransformerIndices,
 )
-from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
-from opf_dataset_utils.physics.power import calculate_branch_powers
+from opf_dataset_utils.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.power import calculate_branch_powers
 from tests.utils import setup_test
 
 

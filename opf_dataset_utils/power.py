@@ -12,14 +12,8 @@ from opf_dataset_utils.enumerations import (
     NodeTypes,
     SolutionGeneratorIndices,
 )
-from opf_dataset_utils.physics.utils import (
-    aggregate_bus_level,
-    extract_branch_admittances,
-)
-from opf_dataset_utils.physics.voltage import (
-    get_voltage_angles,
-    get_voltages_magnitudes,
-)
+from opf_dataset_utils.utils import aggregate_bus_level, extract_branch_admittances
+from opf_dataset_utils.voltage import get_voltage_angles, get_voltages_magnitudes
 
 
 def get_generator_powers(predictions: dict[str, Tensor]) -> Tensor:

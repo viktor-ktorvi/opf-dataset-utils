@@ -12,19 +12,19 @@ from opf_dataset_utils.enumerations import (
     GridTransformerIndices,
     NodeTypes,
 )
-from opf_dataset_utils.physics.errors.inequality.voltage import (
+from opf_dataset_utils.errors.inequality.voltage import (
     calculate_lower_voltage_angle_difference_errors,
     calculate_lower_voltage_magnitude_errors,
     calculate_upper_voltage_angle_difference_errors,
     calculate_upper_voltage_magnitude_errors,
 )
-from opf_dataset_utils.physics.metrics.aggregation import AggregatorMetric
-from opf_dataset_utils.physics.metrics.inequality.bound_types import BoundTypes
-from opf_dataset_utils.physics.metrics.relative_values import (
+from opf_dataset_utils.metrics.aggregation import AggregatorMetric
+from opf_dataset_utils.metrics.inequality.bound_types import BoundTypes
+from opf_dataset_utils.metrics.relative_values import (
     ValueTypes,
     calculate_relative_values,
 )
-from opf_dataset_utils.physics.metrics.units import convert_unit
+from opf_dataset_utils.metrics.units import convert_unit
 
 
 # TODO test

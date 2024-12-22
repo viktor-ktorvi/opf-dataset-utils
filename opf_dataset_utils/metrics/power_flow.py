@@ -5,15 +5,15 @@ from torch import Tensor
 from torch_geometric.data import HeteroData
 
 from opf_dataset_utils.enumerations import NodeTypes
-from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
-from opf_dataset_utils.physics.metrics.aggregation import AggregatorMetric
-from opf_dataset_utils.physics.metrics.power import calculate_power_type
-from opf_dataset_utils.physics.metrics.relative_values import (
+from opf_dataset_utils.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.metrics.aggregation import AggregatorMetric
+from opf_dataset_utils.metrics.power import calculate_power_type
+from opf_dataset_utils.metrics.relative_values import (
     ValueTypes,
     calculate_relative_values,
 )
-from opf_dataset_utils.physics.metrics.units import convert_unit
-from opf_dataset_utils.physics.power import calculate_bus_powers
+from opf_dataset_utils.metrics.units import convert_unit
+from opf_dataset_utils.power import calculate_bus_powers
 
 
 class PowerFlowError(AggregatorMetric):

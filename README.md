@@ -69,11 +69,11 @@ draw_graph(dataset[0], ax=ax, node_size=300)
 See [scripts/power_flow_errors.py](scripts/power_flow_errors.py) for a full example.
 
 ```python
-from opf_dataset_utils.physics.errors.power_flow import calculate_power_flow_errors
-from opf_dataset_utils.physics.metrics.power_flow import PowerFlowError
+from opf_dataset_utils.errors.power_flow import calculate_power_flow_errors
+from opf_dataset_utils.metrics.power_flow import PowerFlowError
 
 with torch.no_grad():
-    untrained_predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
+  untrained_predictions = untrained_model(batch.x_dict, batch.edge_index_dict)
 
 # calculate errors
 mean_abs_errors_solution = calculate_power_flow_errors(batch, batch.y_dict).abs().mean()
@@ -136,8 +136,8 @@ See [scripts/inequality_errors.py](scripts/inequality_errors.py) for a full exam
 
 ```python
 from opf_dataset_utils.enumerations import EdgeTypes
-from opf_dataset_utils.physics.errors.inequality.voltage import calculate_upper_voltage_angle_difference_errors
-from opf_dataset_utils.physics.errors.inequality.generator_power import calculate_lower_active_power_errors
+from opf_dataset_utils.errors.inequality.voltage import calculate_upper_voltage_angle_difference_errors
+from opf_dataset_utils.errors.inequality.generator_power import calculate_lower_active_power_errors
 
 upper_voltage_angle_violations_transformer = calculate_upper_voltage_angle_difference_errors(data, data.y_dict, EdgeTypes.TRANSFORMER)
 lower_active_power_generation_violations = calculate_lower_active_power_errors(data, data.y_dict)
@@ -193,7 +193,7 @@ See [scripts/branch_powers.py](scripts/branch_powers.py) for a full example.
 
 ```python
 from opf_dataset_utils.enumerations import EdgeTypes
-from opf_dataset_utils.physics.power import calculate_branch_powers
+from opf_dataset_utils.power import calculate_branch_powers
 
 ac_line_powers_from, ac_line_powers_to = calculate_branch_powers(batch, batch.y_dict, EdgeTypes.AC_LINE)
 transformer_powers_from, transformer_powers_to = calculate_branch_powers(batch, batch.y_dict, EdgeTypes.TRANSFORMER)

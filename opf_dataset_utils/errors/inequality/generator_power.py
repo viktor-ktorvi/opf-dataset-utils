@@ -8,7 +8,7 @@ from opf_dataset_utils.enumerations import (
     NodeTypes,
     SolutionGeneratorIndices,
 )
-from opf_dataset_utils.physics.errors.inequality.violations import (
+from opf_dataset_utils.errors.inequality.violations import (
     calculate_lower_violations,
     calculate_upper_violations,
 )
