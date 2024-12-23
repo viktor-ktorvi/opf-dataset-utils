@@ -26,7 +26,7 @@ class GeneratorPowerError(AggregatorMetric):
     is_differentiable: Optional[bool] = True
     full_state_update: bool = True
 
-    def __init__(self, aggr: str, value_type: str, power_type: str, unit: str ="per-unit", **kwargs):
+    def __init__(self, aggr: str, value_type: str, power_type: str, unit: str = "per-unit", **kwargs):
         super().__init__(aggr, **kwargs)
         self.power_type = power_type
         self.unit = unit
