@@ -28,6 +28,11 @@ from opf_dataset_utils.metrics.inequality.voltage import (
 )
 from opf_dataset_utils.metrics.power import Power, PowerTypes
 from opf_dataset_utils.metrics.power_flow import PowerFlowError
+from opf_dataset_utils.metrics.variable.generator_power import GeneratorPowerError
+from opf_dataset_utils.metrics.variable.voltage import (
+    VoltageAngleError,
+    VoltageMagnitudeError,
+)
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
@@ -43,8 +48,36 @@ def create_opf_metrics(split: str) -> MetricCollection:
     metric_dict = {}
     for aggr in AggregationTypes:
         metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
-        metric_dict[f"{split}/{aggr} absolute branch power inequality error [kVA]"] = BranchPowerInequalityError(aggr=aggr, value_type="absolute", unit="kilo")
-        metric_dict[f"{split}/{aggr} relative branch power inequality error [%]"] = BranchPowerInequalityError(aggr=aggr, value_type="relative")
+        metric_dict[f"{split}/{aggr} absolute branch power inequality error [kVA]"] = BranchPowerInequalityError(
+            aggr=aggr, value_type="absolute", unit="kilo"
+        )
+        metric_dict[f"{split}/{aggr} relative branch power inequality error [%]"] = BranchPowerInequalityError(
+            aggr=aggr, value_type="relative"
+        )
+
+        metric_dict[f"{split}/{aggr} absolute voltage magnitude error [per-unit]"] = VoltageMagnitudeError(
+            aggr=aggr, value_type="absolute"
+        )
+        metric_dict[f"{split}/{aggr} relative voltage magnitude error [%]"] = VoltageMagnitudeError(
+            aggr=aggr, value_type="relative"
+        )
+
+        metric_dict[f"{split}/{aggr} absolute voltage angle error [per-unit]"] = VoltageAngleError(
+            aggr=aggr, value_type="absolute", unit="degree"
+        )
+        metric_dict[f"{split}/{aggr} relative voltage angle error [%]"] = VoltageAngleError(
+            aggr=aggr, value_type="relative"
+        )
+
+        for power_type in [PowerTypes.ACTIVE, PowerTypes.REACTIVE]:
+            metric_dict[f"{split}/{aggr} absolute {power_type} generator power error [kVA]"] = GeneratorPowerError(
+                aggr=aggr, power_type=power_type, unit="kilo", value_type="absolute"
+            )
+
+            # TODO add defualt value to unit
+            metric_dict[f"{split}/{aggr} relative {power_type} generator power error [%]"] = GeneratorPowerError(
+                aggr=aggr, power_type=power_type, value_type="relative"
+            )
 
         for power_type in PowerTypes:
             metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = PowerFlowError(
@@ -117,14 +150,14 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-            self,
-            data_module: OPFDataModule,
-            hidden_channels: int,
-            num_layers: int,
-            num_mlp_layers: int,
-            learning_rate: float,
-            power_flow_multiplier: float,
-            heads: int,
+        self,
+        data_module: OPFDataModule,
+        hidden_channels: int,
+        num_layers: int,
+        num_mlp_layers: int,
+        learning_rate: float,
+        power_flow_multiplier: float,
+        heads: int,
     ):
         super().__init__()
 
@@ -197,10 +230,10 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-            self,
-            x_dict: dict[str, Tensor],
-            edge_index_dict: dict[tuple[str, str, str], LongTensor],
-            edge_attr_dict: dict[tuple[str, str, str], Tensor],
+        self,
+        x_dict: dict[str, Tensor],
+        edge_index_dict: dict[tuple[str, str, str], LongTensor],
+        edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
@@ -301,6 +334,7 @@ def main(cfg: DictConfig):
     torch.multiprocessing.set_sharing_strategy("file_system")
     seed_everything(cfg.random_seed, workers=True)
 
+    # TODO bit worried that shuffling isn't being done properly; might switch off of the one built into pyg
     opf_data = OPFDataModule(
         case_name=cfg.data.case_name,
         topological_perturbations=cfg.data.topological_perturbations,
