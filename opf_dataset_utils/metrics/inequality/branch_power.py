@@ -56,17 +56,19 @@ class BranchPowerInequalityError(AggregatorMetric):
         )
 
         if self.value_type == ValueTypes.ABSOLUTE:
-            baseMVA_ac_from = batch.x[
+            baseMVA_per_bus = batch.x[batch.batch_dict[NodeTypes.BUS]]
+
+            baseMVA_ac_from = baseMVA_per_bus[
                 batch.edge_index_dict[NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS][EdgeIndexIndices.FROM]
             ]
-            baseMVA_ac_to = batch.x[
+            baseMVA_ac_to = baseMVA_per_bus[
                 batch.edge_index_dict[NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS][EdgeIndexIndices.TO]
             ]
 
-            baseMVA_transformer_from = batch.x[
+            baseMVA_transformer_from = baseMVA_per_bus[
                 batch.edge_index_dict[NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS][EdgeIndexIndices.FROM]
             ]
-            baseMVA_transformer_to = batch.x[
+            baseMVA_transformer_to = baseMVA_per_bus[
                 batch.edge_index_dict[NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS][EdgeIndexIndices.TO]
             ]
 
