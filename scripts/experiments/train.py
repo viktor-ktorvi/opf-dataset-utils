@@ -209,10 +209,6 @@ class ExampleModel(LightningModule):
         with torch.no_grad():
             self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
 
-        # TODO metrics for:
-        #  inequality constraints -- absolute and relative (divided by the range?)
-        #  thresholded relative mean-absolute error (TRMAE)? (maybe threshold or maybe just ignore zeros) (for Pg, Qg, Sg?, vm, va, Sf?, St?)
-
         # metrics (each has to be an attribute of the model class)
         for split in Split:
             # OPF related metrics
