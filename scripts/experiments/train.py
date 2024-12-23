@@ -18,6 +18,7 @@ from opf_dataset_utils import CONFIG_PATH
 from opf_dataset_utils.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.metrics.cost import OptimalityGap
 from opf_dataset_utils.metrics.inequality.bound_types import BoundTypes
+from opf_dataset_utils.metrics.inequality.branch_power import BranchPowerInequalityError
 from opf_dataset_utils.metrics.inequality.generator_power import (
     GeneratorPowerInequalityError,
 )
@@ -42,6 +43,8 @@ def create_opf_metrics(split: str) -> MetricCollection:
     metric_dict = {}
     for aggr in AggregationTypes:
         metric_dict[f"{split}/{aggr} optimality gap [%]"] = OptimalityGap(aggr=aggr)
+        metric_dict[f"{split}/{aggr} absolute branch power inequality error [kVA]"] = BranchPowerInequalityError(aggr=aggr, value_type="absolute", unit="kilo")
+        metric_dict[f"{split}/{aggr} relative branch power inequality error [%]"] = BranchPowerInequalityError(aggr=aggr, value_type="relative")
 
         for power_type in PowerTypes:
             metric_dict[f"{split}/{aggr} absolute {power_type} power flow error [kVA]"] = PowerFlowError(
@@ -114,14 +117,14 @@ class ExampleModel(LightningModule):
     r2_scores: dict[str, dict[str, Metric]]
 
     def __init__(
-        self,
-        data_module: OPFDataModule,
-        hidden_channels: int,
-        num_layers: int,
-        num_mlp_layers: int,
-        learning_rate: float,
-        power_flow_multiplier: float,
-        heads: int,
+            self,
+            data_module: OPFDataModule,
+            hidden_channels: int,
+            num_layers: int,
+            num_mlp_layers: int,
+            learning_rate: float,
+            power_flow_multiplier: float,
+            heads: int,
     ):
         super().__init__()
 
@@ -194,10 +197,10 @@ class ExampleModel(LightningModule):
         }
 
     def forward(
-        self,
-        x_dict: dict[str, Tensor],
-        edge_index_dict: dict[tuple[str, str, str], LongTensor],
-        edge_attr_dict: dict[tuple[str, str, str], Tensor],
+            self,
+            x_dict: dict[str, Tensor],
+            edge_index_dict: dict[tuple[str, str, str], LongTensor],
+            edge_attr_dict: dict[tuple[str, str, str], Tensor],
     ) -> dict[str, Tensor]:
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
