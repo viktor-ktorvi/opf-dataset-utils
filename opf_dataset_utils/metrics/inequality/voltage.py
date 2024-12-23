@@ -127,7 +127,7 @@ class VoltageAngleDifferenceInequalityError(AggregatorMetric):
                 return super().update(errors_rad)
 
             if self.unit == AngleUnits.DEGREE:
-                return super().update(errors_rad * 180.0 / torch.pi)
+                return super().update(torch.rad2deg(errors_rad))
 
         if self.value_type == ValueTypes.RELATIVE:
             Va_diff_ac_line_max = batch.edge_attr_dict[NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS][
