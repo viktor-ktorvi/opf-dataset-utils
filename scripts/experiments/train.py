@@ -62,7 +62,7 @@ def create_opf_metrics(split: str) -> MetricCollection:
             aggr=aggr, value_type="relative"
         )
 
-        metric_dict[f"{split}/{aggr} absolute voltage angle error [per-unit]"] = VoltageAngleError(
+        metric_dict[f"{split}/{aggr} absolute voltage angle error [deg]"] = VoltageAngleError(
             aggr=aggr, value_type="absolute", unit="degree"
         )
         metric_dict[f"{split}/{aggr} relative voltage angle error [%]"] = VoltageAngleError(
