@@ -51,3 +51,8 @@ def convert_unit(values_per_unit: Tensor, base_mega: Tensor, unit: str) -> Tenso
         return values_mega * 1e6
 
     raise ValueError(f"The unit {unit} is not supported. Expected one of {[str(u) for u in UnitTypes]}")
+
+
+class AngleUnits(StrEnum):
+    RADIAN = "radian"
+    DEGREE = "degree"
