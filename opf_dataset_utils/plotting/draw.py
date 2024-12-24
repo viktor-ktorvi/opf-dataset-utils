@@ -1,7 +1,7 @@
+import matplotlib.lines as mlines
 import networkx as nx
 import torch
 from matplotlib.axes import Axes
-import matplotlib.lines as mlines
 from torch_geometric.data import HeteroData
 from torch_geometric.utils import to_networkx
 
@@ -62,7 +62,7 @@ def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = Tru
     # draw different edge types
     ac_line_mask = homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS)]
     transformer_mask = (
-            homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
+        homogenous_data["edge_type"] == edge_type_ids[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)]
     )
 
     equipment_links = edge_index_to_list_of_tuples(
@@ -74,18 +74,46 @@ def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = Tru
     # drawing edges with direction
     arrowsize = nx_node_kwargs.get("node_size", 300) // 15
     line_collection = nx.draw_networkx_edges(
-        G, pos, ax=ax, arrows=True, edgelist=equipment_links, style=(0, (1, 3)), arrowsize=arrowsize,
+        G,
+        pos,
+        ax=ax,
+        arrows=True,
+        edgelist=equipment_links,
+        style=(0, (1, 3)),
+        arrowsize=arrowsize,
     )
     ax.add_artist(
-        mlines.Line2D([], [], color=line_collection[0].get_edgecolor(), linestyle=line_collection[0].get_linestyle(), label="equipment link")
+        mlines.Line2D(
+            [],
+            [],
+            color=line_collection[0].get_edgecolor(),
+            linestyle=line_collection[0].get_linestyle(),
+            label="equipment link",
+        )
     )
-    line_collection = nx.draw_networkx_edges(G, pos, ax=ax, arrows=True, edgelist=ac_lines, style="solid", arrowsize=arrowsize)
-    ax.add_artist(
-        mlines.Line2D([], [], color=line_collection[0].get_edgecolor(), linestyle=line_collection[0].get_linestyle(), label="AC line")
+    line_collection = nx.draw_networkx_edges(
+        G, pos, ax=ax, arrows=True, edgelist=ac_lines, style="solid", arrowsize=arrowsize
     )
-    line_collection = nx.draw_networkx_edges(G, pos, ax=ax, arrows=True, edgelist=transformers, style=(0, (5, 5)), arrowsize=arrowsize)
     ax.add_artist(
-        mlines.Line2D([], [], color=line_collection[0].get_edgecolor(), linestyle=line_collection[0].get_linestyle(), label="transformer")
+        mlines.Line2D(
+            [],
+            [],
+            color=line_collection[0].get_edgecolor(),
+            linestyle=line_collection[0].get_linestyle(),
+            label="AC line",
+        )
+    )
+    line_collection = nx.draw_networkx_edges(
+        G, pos, ax=ax, arrows=True, edgelist=transformers, style=(0, (5, 5)), arrowsize=arrowsize
+    )
+    ax.add_artist(
+        mlines.Line2D(
+            [],
+            [],
+            color=line_collection[0].get_edgecolor(),
+            linestyle=line_collection[0].get_linestyle(),
+            label="transformer",
+        )
     )
 
     # draw different node types
