@@ -216,3 +216,26 @@ tensor([0.2922-0.0601j, 0.1681+0.0037j, 0.4683+0.1187j], device='cuda:0')
 ```
 
 #### Etc.
+
+### Metrics
+
+All of the above calculations can be encapsulated in TorchMetrics metrics. 
+See [scripts/metrics.py](scripts/metrics.py) for a full example.
+
+```python
+from opf_dataset_utils.metrics.variable.voltage import VoltageMagnitudeError
+from opf_dataset_utils.metrics.power_flow import PowerFlowError
+from opf_dataset_utils.metrics.power import Power
+
+metric1 = VoltageMagnitudeError(aggr="max", value_type="absolute")
+metric2 = PowerFlowError(aggr="mean", power_type="apparent", value_type="relative")
+metric3 = Power(aggr="min", power_type="active", unit="kilo")
+# ...
+```
+
+```
+val/max absolute voltage magnitude error [per-unit]                        : 226.57712
+val/mean relative apparent power flow error [%]                            : 48681344.00000
+val/min active power [kVA]                                                 : -776817.87500
+...
+```
