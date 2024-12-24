@@ -59,7 +59,7 @@ draw_graph(dataset[0], ax=ax, node_size=300)
 ```
 
 <p align="center">
-<img src="img/draw_example.png" alt="Example graph" width="600"/>
+<img src="img/draw_example.png" alt="Example graph" width="1000"/>
 </p>
 
 ### OPF calculations
