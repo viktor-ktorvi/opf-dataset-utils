@@ -1,6 +1,6 @@
 # opf-dataset-utils
 ![PyPI Downloads](https://static.pepy.tech/badge/opf-dataset-utils)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)]([https://github.com/dwyl/esta/issues](https://github.com/viktor-ktorvi/opf-dataset-utils/issues))
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/viktor-ktorvi/opf-dataset-utils/issues)
 <hr>
 
 In this package we provide utils to support working with the
