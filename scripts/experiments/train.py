@@ -74,7 +74,6 @@ def create_opf_metrics(split: str) -> MetricCollection:
                 aggr=aggr, power_type=power_type, unit="kilo", value_type="absolute"
             )
 
-            # TODO add defualt value to unit
             metric_dict[f"{split}/{aggr} relative {power_type} generator power error [%]"] = GeneratorPowerError(
                 aggr=aggr, power_type=power_type, value_type="relative"
             )
