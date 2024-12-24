@@ -11,9 +11,8 @@ def main():
     -------
 
     """
-    dataset = OPFDataset("data", case_name="pglib_opf_case14_ieee", split="val", num_groups=1)
+    dataset = OPFDataset("data", case_name="pglib_opf_case14_ieee", split="val", num_groups=1, topological_perturbations=True)
     fig, ax = plt.subplots(1, 1)
-    # TODO draw directed graphs as well
     draw_graph(dataset[0], ax=ax, node_size=300)
 
     plt.show()
