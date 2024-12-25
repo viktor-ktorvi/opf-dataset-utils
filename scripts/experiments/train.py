@@ -11,10 +11,12 @@ from torch import LongTensor, Tensor, nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import GAT, to_hetero
+from torch_geometric.utils import to_undirected
 from torchmetrics import Metric, MetricCollection, R2Score
 
 import wandb
 from opf_dataset_utils import CONFIG_PATH
+from opf_dataset_utils.enumerations import EdgeTypes, NodeTypes
 from opf_dataset_utils.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.metrics.cost import OptimalityGap
 from opf_dataset_utils.metrics.inequality.bound_types import BoundTypes
@@ -233,6 +235,14 @@ class ExampleModel(LightningModule):
         h_dict = self.in_scaler(x_dict)
         h_dict = self.in_mlp(h_dict)
 
+        for edge_type in [
+            (NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS),
+            (NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS),
+        ]:
+            edge_index_dict[edge_type], edge_attr_dict[edge_type] = to_undirected(
+                edge_index_dict[edge_type], edge_attr_dict[edge_type]
+            )
+
         h_dict = self.gnn(x=h_dict, edge_index=edge_index_dict, edge_attr=edge_attr_dict)
 
         h_dict = self.out_mlp(h_dict)
@@ -329,7 +339,6 @@ def main(cfg: DictConfig):
     torch.multiprocessing.set_sharing_strategy("file_system")
     seed_everything(cfg.random_seed, workers=True)
 
-    # TODO bit worried that shuffling isn't being done properly; might switch off of the one built into pyg
     opf_data = OPFDataModule(
         case_name=cfg.data.case_name,
         topological_perturbations=cfg.data.topological_perturbations,
