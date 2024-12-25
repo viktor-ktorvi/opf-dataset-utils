@@ -271,7 +271,7 @@ class ExampleModel(LightningModule):
         loss = mse + self.power_flow_multiplier * apparent_power_flow_error
 
         # log metrics
-        self.log(f"{split}/MSE", mse, **logging_kwargs)
+        self.log(f"{split}/supervised loss", mse, **logging_kwargs)
         self.log(f"{split}/loss", loss, **logging_kwargs)
         self.log_dict(opf_metrics, **logging_kwargs)
 
