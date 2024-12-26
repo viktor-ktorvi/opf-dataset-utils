@@ -12,9 +12,6 @@ from opf_dataset_utils.metrics.relative_values import (
 )
 from opf_dataset_utils.metrics.units import AngleUnits, convert_unit
 
-# TODO test
-#  detailed docs
-
 
 class VoltageMagnitudeError(AggregatorMetric):
     """
@@ -86,3 +83,48 @@ class VoltageAngleError(AggregatorMetric):
 
         if self.value_type == ValueTypes.RELATIVE:
             return super().update(calculate_relative_values(abs_errors_rad, angle_target_rad))
+
+
+class VoltageMagnitude(AggregatorMetric):
+    """
+    A metric that measures the bus-level voltages in the grid.
+    """
+
+    is_differentiable: Optional[bool] = True
+    full_state_update: bool = True
+
+    def __init__(self, aggr: str, unit: str = "per-unit", **kwargs):
+        super().__init__(aggr, **kwargs)
+        self.unit = unit
+
+    def update(self, batch: HeteroData, predictions: dict[str, Tensor]):
+        magnitudes_pred_pu = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE]
+
+        base_kV = batch.x_dict[NodeTypes.BUS][:, GridBusIndices.BASE_KV]
+        return super().update(convert_unit(magnitudes_pred_pu, base_kV, self.unit))
+
+
+class VoltageAngle(AggregatorMetric):
+    """
+    A metric that measures absolute and relative errors of the bus voltage angle predictions.
+    """
+
+    is_differentiable: Optional[bool] = True
+    higher_is_better: Optional[bool] = False
+    full_state_update: bool = True
+
+    def __init__(self, aggr: str, unit: str = "radian", **kwargs):
+        super().__init__(aggr, **kwargs)
+        self.unit = unit
+
+        if unit not in list(AngleUnits):
+            raise ValueError(f"Angle unit '{unit}' is not supported. Expected one of {[au for au in AngleUnits]}.")
+
+    def update(self, batch: HeteroData, predictions: dict[str, Tensor]):
+        angle_pred_rad = predictions[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_ANGLE]
+
+        if self.unit == AngleUnits.RADIAN:
+            return super().update(angle_pred_rad)
+
+        if self.unit == AngleUnits.DEGREE:
+            return super().update(torch.rad2deg(angle_pred_rad))
