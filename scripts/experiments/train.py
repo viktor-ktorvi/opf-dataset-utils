@@ -30,9 +30,14 @@ from opf_dataset_utils.metrics.inequality.voltage import (
 )
 from opf_dataset_utils.metrics.power import Power, PowerTypes
 from opf_dataset_utils.metrics.power_flow import PowerFlowError
-from opf_dataset_utils.metrics.variable.generator_power import GeneratorPowerError
+from opf_dataset_utils.metrics.variable.generator_power import (
+    GeneratorPower,
+    GeneratorPowerError,
+)
 from opf_dataset_utils.metrics.variable.voltage import (
+    VoltageAngle,
     VoltageAngleError,
+    VoltageMagnitude,
     VoltageMagnitudeError,
 )
 from scripts.experiments.utils.data import OPFDataModule
@@ -46,6 +51,19 @@ class Split(StrEnum):
     TEST = "test"
 
 
+# TODO issues with metrics
+#  relative metrics are being divided by extremely small values giving useless numbers (while abs errors are pretty low)
+#  adding epsilon values would help (but how do you choose a value (it depends on the variable))
+#  hard to compare errors to values of powers and voltages in the grid
+#  power, generator power, and voltage metrics are not absolute so it could be that the mean is close to zero, while actual
+#  values are far from it, just of varying sign
+
+
+# TODO visualizing data
+#  understanding the errors requires being familiar with the distribution of the features and targets
+#  this would be mitigated by relative metrics that actually work, but this couldn't replace absolute metrics
+#  therefore having good visualization function would be really useful
+#  this is not easy cause there are a lot of features plus the values in the same feature can be spread out on different orders of magnitudes (especially powers)
 def create_opf_metrics(split: str) -> MetricCollection:
     metric_dict = {}
     for aggr in AggregationTypes:
@@ -71,6 +89,9 @@ def create_opf_metrics(split: str) -> MetricCollection:
             aggr=aggr, value_type="relative"
         )
 
+        metric_dict[f"{split}/{aggr} voltage magnitude [per-unit]"] = VoltageMagnitude(aggr=aggr)
+        metric_dict[f"{split}/{aggr} voltage angle [deg]"] = VoltageAngle(aggr=aggr, unit="degree")
+
         for power_type in [PowerTypes.ACTIVE, PowerTypes.REACTIVE]:
             metric_dict[f"{split}/{aggr} absolute {power_type} generator power error [kVA]"] = GeneratorPowerError(
                 aggr=aggr, power_type=power_type, unit="kilo", value_type="absolute"
@@ -78,6 +99,10 @@ def create_opf_metrics(split: str) -> MetricCollection:
 
             metric_dict[f"{split}/{aggr} relative {power_type} generator power error [%]"] = GeneratorPowerError(
                 aggr=aggr, power_type=power_type, value_type="relative"
+            )
+
+            metric_dict[f"{split}/{aggr} {power_type} generator power [kVA]"] = GeneratorPower(
+                aggr=aggr, power_type=power_type, unit="kilo"
             )
 
         for power_type in PowerTypes:
