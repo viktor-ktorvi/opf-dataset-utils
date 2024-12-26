@@ -7,12 +7,12 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
-from torch import LongTensor, Tensor, nn
+from torch import Tensor, nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import GAT, to_hetero
 from torch_geometric.utils import to_undirected
-from torchmetrics import Metric, MetricCollection, R2Score
+from torchmetrics import MetricCollection, R2Score
 
 import wandb
 from opf_dataset_utils import CONFIG_PATH
@@ -123,51 +123,36 @@ def create_opf_metrics(split: str) -> MetricCollection:
     return MetricCollection(metric_dict)
 
 
-class ExampleModel(LightningModule):
-    """
-    An example (lightning) model for the OPFDataset.
+class GaussianNegativeLogLikelihood(nn.Module):
+    """Negative log-likelihood of the Gaussian distribution."""
 
-    Processes the heterogeneous data by normalizing the inputs for each node type,
-    projecting the features to a hidden dimension using an MLP,
-    processing the data with a GNN, projects the outputs down to the target dimensions,
-    and inverse normalizes the outputs.
+    def forward(self, target: Tensor, mean: Tensor, std: Tensor):
+        # std = std + 0.01
+        neg_log_likelihood = torch.log(std) + (target - mean) ** 2 / 2 / std**2
 
-    Calculates and logs metrics like R2 score and MSE, as well as OPF specific metrics
-    like absolute power flow error.
+        return torch.sum(neg_log_likelihood)
 
-    Includes the absolute power flow error as a penalty in the loss.
-    """
 
-    learning_rate: float
-
-    in_scaler: HeteroStandardScaler
-    in_mlp: HeteroMLP
-    gnn: nn.Module
-    out_mlp: HeteroMLP
-    out_scaler: HeteroStandardScaler
-
-    criterion: nn.Module
-    mean_abs_power_flow_errors: dict[str, Metric]
-    r2_scores: dict[str, dict[str, Metric]]
-
+class Model(nn.Module):
     def __init__(
         self,
         data_module: OPFDataModule,
         hidden_channels: int,
         num_layers: int,
         num_mlp_layers: int,
-        learning_rate: float,
-        power_flow_multiplier: float,
         heads: int,
+        probabilistic: bool,
     ):
         super().__init__()
 
-        self.learning_rate = learning_rate
-        self.power_flow_multiplier = power_flow_multiplier
-        self.criterion = nn.MSELoss()  # TODO probabilistic forecasting
+        self.probabilistic = probabilistic
+        if probabilistic:
+            self.criterion = GaussianNegativeLogLikelihood()
+        else:
+            self.criterion = nn.MSELoss()
 
         # init modules
-        example_batch: HeteroData = next(iter(data_module.train_dataloader()))
+        example_batch = next(iter(data_module.train_dataloader()))
 
         self.in_scaler = HeteroStandardScaler()
         self.out_scaler = HeteroStandardScaler(inverse=True)
@@ -206,9 +191,103 @@ class ExampleModel(LightningModule):
             num_layers=num_mlp_layers,
         )
 
+        if probabilistic:
+            self.out_mlp_std = HeteroMLP(
+                in_channels={key: hidden_channels for key in example_batch.y_dict},
+                out_channels={key: y.shape[-1] for key, y in example_batch.y_dict.items()},
+                hidden_channels=hidden_channels,
+                num_layers=num_mlp_layers,
+            )
+
         # initialize lazy modules (edge_dim in the GNN)
         with torch.no_grad():
-            self(example_batch.x_dict, example_batch.edge_index_dict, example_batch.edge_attr_dict)
+            self(example_batch)
+
+    def forward(self, batch: HeteroData) -> tuple[dict[str, Tensor], Tensor]:
+        x_dict = batch.x_dict
+        edge_index_dict = batch.edge_index_dict
+        edge_attr_dict = batch.edge_attr_dict
+
+        h_dict = self.in_scaler(x_dict)
+        h_dict = self.in_mlp(h_dict)
+
+        # ac lines and transformers to undirected edges
+        for edge_type in [
+            (NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS),
+            (NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS),
+        ]:
+            edge_index_dict[edge_type], edge_attr_dict[edge_type] = to_undirected(
+                edge_index_dict[edge_type], edge_attr_dict[edge_type]
+            )
+
+        h_dict = self.gnn(x=h_dict, edge_index=edge_index_dict, edge_attr=edge_attr_dict)
+
+        out_dict = self.out_mlp(h_dict)
+        pred_dict = self.out_scaler(out_dict)
+
+        y_dict = batch.y_dict
+        pred_dict_scaled = self.out_scaler.scale(pred_dict)
+        y_dict_scaled = self.out_scaler.scale(y_dict)
+
+        if not self.probabilistic:
+            loss = torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()
+            return pred_dict, loss
+
+        std_pred_dict = self.out_mlp_std(h_dict)
+
+        for node_type in std_pred_dict:
+            std_pred_dict[node_type] = nn.functional.softplus(std_pred_dict[node_type])
+
+        loss = torch.stack(
+            [self.criterion(y_dict_scaled[key], pred_dict_scaled[key], std_pred_dict[key]) for key in y_dict]
+        ).sum()
+
+        return pred_dict, loss
+
+
+class ModelModule(LightningModule):
+    """
+    An example (lightning) model for the OPFDataset.
+
+    Processes the heterogeneous data by normalizing the inputs for each node type,
+    projecting the features to a hidden dimension using an MLP,
+    processing the data with a GNN, projects the outputs down to the target dimensions,
+    and inverse normalizes the outputs.
+
+    Calculates and logs metrics like R2 score and MSE, as well as OPF specific metrics
+    like absolute power flow error.
+
+    Includes the absolute power flow error as a penalty in the loss.
+    """
+
+    learning_rate: float
+
+    def __init__(
+        self,
+        data_module: OPFDataModule,
+        hidden_channels: int,
+        num_layers: int,
+        num_mlp_layers: int,
+        learning_rate: float,
+        power_flow_multiplier: float,
+        heads: int,
+        probabilistic: bool,
+    ):
+        super().__init__()
+
+        self.learning_rate = learning_rate
+        self.power_flow_multiplier = power_flow_multiplier
+
+        self.model = Model(
+            data_module=data_module,
+            hidden_channels=hidden_channels,
+            num_layers=num_layers,
+            num_mlp_layers=num_mlp_layers,
+            heads=heads,
+            probabilistic=probabilistic,
+        )
+
+        example_batch = next(iter(data_module.train_dataloader()))
 
         # metrics (each has to be an attribute of the model class)
         for split in Split:
@@ -226,52 +305,26 @@ class ExampleModel(LightningModule):
             for split in Split
         }
 
-    def forward(
-        self,
-        x_dict: dict[str, Tensor],
-        edge_index_dict: dict[tuple[str, str, str], LongTensor],
-        edge_attr_dict: dict[tuple[str, str, str], Tensor],
-    ) -> dict[str, Tensor]:
-        h_dict = self.in_scaler(x_dict)
-        h_dict = self.in_mlp(h_dict)
+    def forward(self, batch):
+        predictions_dict, loss = self.model(batch)
+        return predictions_dict, loss
 
-        for edge_type in [
-            (NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS),
-            (NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS),
-        ]:
-            edge_index_dict[edge_type], edge_attr_dict[edge_type] = to_undirected(
-                edge_index_dict[edge_type], edge_attr_dict[edge_type]
-            )
-
-        h_dict = self.gnn(x=h_dict, edge_index=edge_index_dict, edge_attr=edge_attr_dict)
-
-        h_dict = self.out_mlp(h_dict)
-        out_dict = self.out_scaler(h_dict)
-
-        return out_dict
-
-    def _calculate_loss(self, pred_dict: dict[str, Tensor], y_dict: dict[str, Tensor]) -> Tensor:
-        pred_dict_scaled = self.out_scaler.scale(pred_dict)
-        y_dict_scaled = self.out_scaler.scale(y_dict)
-        return torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()
-
-    def _shared_eval(self, batch, split: str):
+    def _shared_step(self, batch, split: str):
         logging_kwargs = dict(on_step=True, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.batch_size)
 
         # predict
-        pred_dict = self(batch.x_dict, batch.edge_index_dict, batch.edge_attr_dict)
+        pred_dict, supervised_loss = self(batch)
 
         # calculate loss
-        mse = self._calculate_loss(pred_dict, batch.y_dict)
         opf_metrics: dict[str, Tensor] = self.opf_metrics[split](batch, pred_dict)
         apparent_power_flow_error = opf_metrics[
             f"{split}/{AggregationTypes.MEAN} absolute {PowerTypes.APPARENT} power flow error [kVA]"
         ]
 
-        loss = mse + self.power_flow_multiplier * apparent_power_flow_error
+        loss = supervised_loss + self.power_flow_multiplier * apparent_power_flow_error
 
         # log metrics
-        self.log(f"{split}/supervised loss", mse, **logging_kwargs)
+        self.log(f"{split}/supervised loss", supervised_loss, **logging_kwargs)
         self.log(f"{split}/loss", loss, **logging_kwargs)
         self.log_dict(opf_metrics, **logging_kwargs)
 
@@ -283,13 +336,13 @@ class ExampleModel(LightningModule):
         return loss
 
     def training_step(self, batch, batch_idx) -> Tensor:
-        return self._shared_eval(batch, Split.TRAIN)
+        return self._shared_step(batch, Split.TRAIN)
 
     def validation_step(self, batch, batch_idx):
-        self._shared_eval(batch, Split.VALIDATION)
+        self._shared_step(batch, Split.VALIDATION)
 
     def test_step(self, batch, batch_idx):
-        self._shared_eval(batch, Split.TEST)
+        self._shared_step(batch, Split.TEST)
 
     def configure_optimizers(self) -> dict:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -297,11 +350,11 @@ class ExampleModel(LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer=optimizer, factor=0.5, patience=20, threshold=0.01, threshold_mode="rel", min_lr=1e-5
+                    optimizer=optimizer, factor=0.5, patience=15, threshold=0.05, threshold_mode="rel", min_lr=1e-5
                 ),
                 "interval": "epoch",
                 "frequency": 1,
-                "monitor": "val/MSE",
+                "monitor": "val/supervised loss",
                 "strict": True,
                 "name": None,
             },
@@ -347,7 +400,7 @@ def main(cfg: DictConfig):
         num_workers=cfg.num_workers,
     )
 
-    model = ExampleModel(
+    model = ModelModule(
         opf_data,
         hidden_channels=cfg.training.hidden_channels,
         num_layers=cfg.training.num_layers,
@@ -355,6 +408,7 @@ def main(cfg: DictConfig):
         learning_rate=cfg.training.learning_rate,
         power_flow_multiplier=cfg.training.power_flow_multiplier,
         heads=cfg.training.heads,
+        probabilistic=cfg.training.probabilistic,
     )
 
     learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
