@@ -61,3 +61,33 @@ class GeneratorPowerError(AggregatorMetric):
 
         if self.value_type == ValueTypes.RELATIVE:
             return super().update(calculate_relative_values(abs_errors_pu, powers_target_pu))
+
+
+class GeneratorPower(AggregatorMetric):
+    """
+    A metric that measures the generator-level powers in the grid.
+    """
+
+    is_differentiable: Optional[bool] = True
+    full_state_update: bool = True
+
+    def __init__(self, aggr: str, power_type: str, unit: str = "per-unit", **kwargs):
+        super().__init__(aggr, **kwargs)
+        self.power_type = power_type
+        self.unit = unit
+
+        if power_type not in [PowerTypes.ACTIVE, PowerTypes.REACTIVE]:
+            raise ValueError(
+                f"Power type '{power_type}' is not supported. Expected one of {[PowerTypes.ACTIVE, PowerTypes.REACTIVE]}."
+            )
+
+    def update(self, batch: HeteroData, predictions: dict[str, Tensor]):
+        powers_pred_pu = None
+        if self.power_type == PowerTypes.ACTIVE:
+            powers_pred_pu = predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER]
+
+        if self.power_type == PowerTypes.REACTIVE:
+            powers_pred_pu = predictions[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER]
+
+        baseMVA_per_generator = batch.x_dict[NodeTypes.GENERATOR][:, GridGeneratorIndices.TOTAL_BASE_MVA]
+        return super().update(convert_unit(powers_pred_pu, baseMVA_per_generator, self.unit))
