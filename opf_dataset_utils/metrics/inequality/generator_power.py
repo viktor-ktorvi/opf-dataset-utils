@@ -21,9 +21,7 @@ from opf_dataset_utils.metrics.units import convert_unit
 
 
 class GeneratorPowerInequalityError(AggregatorMetric):
-    """
-    A metric for voltage angle difference inequality violations.
-    """
+    """A metric for voltage angle difference inequality violations."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False

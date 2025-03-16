@@ -23,6 +23,7 @@ from opf_dataset_utils.plotting.draw import draw_graph
 def main(cfg: DictConfig):
     """
     Sample subgraphs according to config.
+
     Parameters
     ----------
     cfg: DictConfig
@@ -30,7 +31,6 @@ def main(cfg: DictConfig):
 
     Returns
     -------
-
     """
     seed_everything(cfg.random_seed)
     matplotlib.rcParams["figure.autolayout"] = True

@@ -97,9 +97,9 @@ def print_max_errors(data: HeteroData, predictions: Dict):
 def main():
     """
     Calculate the various inequality violations of the solution and an untrained model.
+
     Returns
     -------
-
     """
     dataset = OPFDataset(
         "data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False, num_groups=1

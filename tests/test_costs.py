@@ -18,19 +18,19 @@ class TestCosts(TestCase):
     def setUpClass(cls):
         """
         Initialize test. Load config and test data.
+
         Returns
         -------
-
         """
         setup_test(cls)
 
     def test_costs(self):
         """
-        Check if value of the objective function that comes with the solved samples is equal to the one calculated
-        from the powers and cost coefficients.
+        Check if value of the objective function that comes with the solved samples is equal to the one calculated from
+        the powers and cost coefficients.
+
         Returns
         -------
-
         """
 
         for loader in self.loaders:

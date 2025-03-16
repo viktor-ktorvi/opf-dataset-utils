@@ -17,9 +17,7 @@ from opf_dataset_utils.power import calculate_bus_powers
 
 
 class PowerFlowError(AggregatorMetric):
-    """
-    A power flow error metric with specifiable aggregation, power type, unit, and value type.
-    """
+    """A power flow error metric with specifiable aggregation, power type, unit, and value type."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False

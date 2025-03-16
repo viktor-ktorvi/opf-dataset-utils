@@ -10,9 +10,9 @@ from torch_geometric.loader import DataLoader
 def setup_test(cls: Type[TestCase]):
     """
     Initialize test. Load config and test data.
+
     Returns
     -------
-
     """
     with initialize(version_base=None, config_path="../config"):
         cls.cfg = compose(config_name="tests")

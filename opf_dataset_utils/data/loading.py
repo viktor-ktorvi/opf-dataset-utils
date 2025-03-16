@@ -9,6 +9,7 @@ from torch_geometric.data import HeteroData
 def extract_edge_index(data_json: Dict, edge_name: str) -> LongTensor:
     """
     Extract the edge index from the data JSON.
+
     Parameters
     ----------
     data_json: Dict
@@ -32,6 +33,7 @@ def extract_edge_index(data_json: Dict, edge_name: str) -> LongTensor:
 def extract_edge_index_rev(data_json: Dict, edge_name: str) -> LongTensor:
     """
     Extract the reverse edge index from the data JSON.
+
     Parameters
     ----------
     data_json: Dict
@@ -55,6 +57,7 @@ def extract_edge_index_rev(data_json: Dict, edge_name: str) -> LongTensor:
 def json2data(filepath: str) -> HeteroData:
     """
     Load a JSON object and convert it to OPFData.
+
     Parameters
     ----------
     filepath: str

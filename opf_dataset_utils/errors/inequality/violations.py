@@ -4,7 +4,9 @@ from torch import Tensor
 
 def calculate_upper_violations(values: Tensor, values_max: Tensor) -> Tensor:
     """
-    Return the difference between the value and its maximum value if the value is larger than the maximum value, otherwise return 0.
+    Return the difference between the value and its maximum value if the value is larger than the maximum value,
+    otherwise return 0.
+
     Parameters
     ----------
     values: Tensor
@@ -21,7 +23,8 @@ def calculate_upper_violations(values: Tensor, values_max: Tensor) -> Tensor:
 
 def calculate_lower_violations(values: Tensor, values_min: Tensor) -> Tensor:
     """
-    Return the difference between the value and its minimum value if the value is smaller than the minimum value, otherwise return 0.
+    Return the difference between the value and its minimum value if the value is smaller than the minimum value,
+    otherwise return 0.
 
     Parameters
     ----------

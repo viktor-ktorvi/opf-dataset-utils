@@ -35,6 +35,7 @@ def aggregate_bus_level(num_buses: int, index: LongTensor, src: Tensor) -> Tenso
 def calculate_admittances(r: Tensor, x: Tensor) -> Tensor:
     """
     Calculate admittances from series parameters.
+
     Parameters
     ----------
     r: Tensor
@@ -54,6 +55,7 @@ def calculate_admittances(r: Tensor, x: Tensor) -> Tensor:
 def extract_branch_admittances(data: HeteroData, branch_type: str) -> Tuple[Tensor, Tensor, Tensor]:
     """
     Extract the series and charging admittances.
+
     Parameters
     ----------
     data: HeteroData
@@ -86,6 +88,7 @@ def extract_branch_admittances(data: HeteroData, branch_type: str) -> Tuple[Tens
 def get_branch_type_indices(branch_type: str) -> Union[Type[GridACLineIndices], Type[GridTransformerIndices]]:
     """
     Return the corresponding enum class for the given branch type.
+
     Parameters
     ----------
     branch_type: str

@@ -14,6 +14,7 @@ class UnitTypes(StrEnum):
 def convert_unit(values_per_unit: Tensor, base_mega: Tensor, unit: str) -> Tensor:
     """
     Convert a per-unit value into its value in the specified unit.
+
     Parameters
     ----------
     values_per_unit: Tensor

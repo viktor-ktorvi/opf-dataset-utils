@@ -11,8 +11,9 @@ from opf_dataset_utils.metrics.relative_values import calculate_relative_values
 
 class OptimalityGap(AggregatorMetric):
     """
-    A metric of the optimality hap between the per-grid costs of the predictions
-    and the targets expressed in percentage points % -- basically a relative cost error.
+    A metric of the optimality hap between the per-grid costs of the predictions and the targets expressed in percentage
+    points % -- basically a relative cost error.
+
     Excludes grids whose target cost is 0.
     """
 

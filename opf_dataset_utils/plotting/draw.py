@@ -20,6 +20,7 @@ from opf_dataset_utils.plotting.utils import (
 def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = True, **nx_node_kwargs):
     """
     Draw an OPF power grid graph.
+
     Parameters
     ----------
     heterogeneous_data: HeteroData
@@ -33,7 +34,6 @@ def draw_graph(heterogeneous_data: HeteroData, ax: Axes, show_legend: bool = Tru
 
     Returns
     -------
-
     """
 
     # to homogeneous and networkx

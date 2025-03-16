@@ -35,18 +35,18 @@ class TestPowerFlow(TestCase):
     def setUpClass(cls):
         """
         Initialize test. Load config and test data.
+
         Returns
         -------
-
         """
         setup_test(cls)
 
     def test_voltage(self):
         """
         Test voltage magnitude and angle difference inequalities. Test reference voltage equality.
+
         Returns
         -------
-
         """
         for loader in self.loaders:
             for batch in loader:
@@ -88,9 +88,9 @@ class TestPowerFlow(TestCase):
     def test_generator_power(self):
         """
         Test generator power inequalities.
+
         Returns
         -------
-
         """
         for loader in self.loaders:
             for batch in loader:
@@ -115,9 +115,9 @@ class TestPowerFlow(TestCase):
     def test_branch_power(self):
         """
         Test branch power inequalities.
+
         Returns
         -------
-
         """
         for loader in self.loaders:
             for batch in loader:

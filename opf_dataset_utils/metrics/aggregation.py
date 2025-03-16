@@ -12,9 +12,7 @@ class AggregationTypes(StrEnum):
 
 
 class AggregatorMetric(Metric):
-    """
-    A metric that aggregates values in a specifiable way.
-    """
+    """A metric that aggregates values in a specifiable way."""
 
     def __init__(self, aggr: str, **kwargs):
         super().__init__(**kwargs)

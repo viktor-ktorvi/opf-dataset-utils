@@ -15,6 +15,7 @@ from opf_dataset_utils.enumerations import (
 def get_voltages_magnitudes(predictions: Dict) -> Tensor:
     """
     Get voltage magnitudes.
+
     Parameters
     ----------
     predictions: Dict
@@ -31,6 +32,7 @@ def get_voltages_magnitudes(predictions: Dict) -> Tensor:
 def get_voltage_angles(predictions: Dict) -> Tensor:
     """
     Get voltage angles.
+
     Parameters
     ----------
     predictions: Dict
@@ -47,6 +49,7 @@ def get_voltage_angles(predictions: Dict) -> Tensor:
 def get_reference_voltage_angles(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Get the voltage angle(s) of the reference node(s).
+
     Parameters
     ----------
     data: HeteroData
@@ -67,6 +70,7 @@ def get_reference_voltage_angles(data: HeteroData, predictions: Dict) -> Tensor:
 def calculate_voltage_angle_differences(data: HeteroData, predictions: Dict, branch_type: str) -> Tensor:
     """
     Calculate voltage angle differences.
+
     Parameters
     ----------
     data: HeteroData

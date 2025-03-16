@@ -14,6 +14,7 @@ from opf_dataset_utils.enumerations import (
 def calculate_costs_per_generator(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate costs per generator.
+
     Parameters
     ----------
     data: HeteroData
@@ -37,6 +38,7 @@ def calculate_costs_per_generator(data: HeteroData, predictions: Dict) -> Tensor
 def calculate_costs_per_grid(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate costs per grid.
+
     Parameters
     ----------
     data: HeteroData

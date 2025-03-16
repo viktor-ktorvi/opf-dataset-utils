@@ -19,18 +19,18 @@ class TestPowerMetrics(TestCase):
     def setUpClass(cls):
         """
         Initialize test. Load config and test data.
+
         Returns
         -------
-
         """
         setup_test(cls)
 
     def test_power_metrics(self):
         """
         Check if the values calculated by the metric classes align with calculating the same values explicitly.
+
         Returns
         -------
-
         """
         mean_apparent_pu_metric = Power(aggr="mean", power_type="apparent", unit="per-unit").to(self.device)
         max_active_mega_metric = Power(aggr="max", power_type="active", unit="mega").to(self.device)

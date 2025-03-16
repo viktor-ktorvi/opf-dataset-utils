@@ -11,9 +11,9 @@ from opf_dataset_utils.costs import (
 def main():
     """
     Calculate costs per generator and per grid.
+
     Returns
     -------
-
     """
     dataset = OPFDataset(
         "data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False, num_groups=1

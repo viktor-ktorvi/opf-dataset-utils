@@ -9,9 +9,9 @@ from opf_dataset_utils.power import calculate_branch_powers
 def main():
     """
     Calculate branch powers.
+
     Returns
     -------
-
     """
     dataset = OPFDataset(
         "data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False, num_groups=1

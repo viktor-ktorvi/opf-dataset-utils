@@ -19,6 +19,7 @@ from opf_dataset_utils.enumerations import (
 def get_neighborhood(source_nodes: List[int], edge_index: LongTensor) -> List[int]:
     """
     Get the 1-hop neighbourhood of the input source nodes.
+
     Parameters
     ----------
     source_nodes: List[int]
@@ -36,8 +37,8 @@ def get_neighborhood(source_nodes: List[int], edge_index: LongTensor) -> List[in
 
 def get_set_difference(a: List, b: List) -> List:
     """
-    Get the set difference of two list.
-    The difference consists of the elements that are in list a, but not in list b.
+    Get the set difference of two list. The difference consists of the elements that are in list a, but not in list b.
+
     Parameters
     ----------
     a: List
@@ -58,6 +59,7 @@ def sample_buses(
 ) -> Dict[str, LongTensor]:
     """
     Sample a subset of buses (and attached equipment) from the given OPFData object.
+
     Parameters
     ----------
     data: HeteroData
@@ -147,6 +149,7 @@ def sample_buses(
 def contains_reference_bus(subset_dict: Dict[str, LongTensor], data: HeteroData) -> bool:
     """
     Return true if the bus subset contains a reference bus.
+
     Parameters
     ----------
     subset_dict: Dict[str, List[int]]
@@ -168,6 +171,7 @@ def contains_reference_bus(subset_dict: Dict[str, LongTensor], data: HeteroData)
 def is_within_size_range(subset_dict: Dict[str, LongTensor], minimum: int = 1, maximum: int = math.inf):
     """
     Return true if the number of buses in the subset is within the given size range.
+
     Parameters
     ----------
     subset_dict: Dict[str, List[int]]

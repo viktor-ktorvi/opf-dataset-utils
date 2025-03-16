@@ -18,6 +18,7 @@ from opf_dataset_utils.voltage import get_voltages_magnitudes
 def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate the power flow errors.
+
     Parameters
     ----------
     data: HeteroData

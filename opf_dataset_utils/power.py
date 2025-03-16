@@ -19,6 +19,7 @@ from opf_dataset_utils.voltage import get_voltage_angles, get_voltages_magnitude
 def get_generator_powers(predictions: dict[str, Tensor]) -> Tensor:
     """
     Returns the generator powers per generator.
+
     Parameters
     ----------
     predictions: dict[str, Tensor]
@@ -40,6 +41,7 @@ def get_generator_powers(predictions: dict[str, Tensor]) -> Tensor:
 def get_load_powers(data: HeteroData) -> Tensor:
     """
     Returns the load powers per load.
+
     Parameters
     ----------
     data: HeteroData
@@ -61,6 +63,7 @@ def get_load_powers(data: HeteroData) -> Tensor:
 def get_generator_powers_per_bus(data: HeteroData, predictions: dict[str, Tensor]) -> Tensor:
     """
     Returns the generator powers per bus.
+
     Parameters
     ----------
     data: HeteroData
@@ -90,6 +93,7 @@ def get_generator_powers_per_bus(data: HeteroData, predictions: dict[str, Tensor
 def get_load_powers_per_bus(data: HeteroData) -> Tensor:
     """
     Returns the load powers per bus.
+
     Parameters
     ----------
     data: HeteroData
@@ -114,6 +118,7 @@ def get_load_powers_per_bus(data: HeteroData) -> Tensor:
 def calculate_bus_powers(data: HeteroData, predictions: dict[str, Tensor]) -> Tensor:
     """
     Returns the complex powers per bus.
+
     Parameters
     ----------
     data: HeteroData
@@ -134,6 +139,7 @@ def calculate_bus_powers(data: HeteroData, predictions: dict[str, Tensor]) -> Te
 def calculate_branch_powers(data: HeteroData, predictions: Dict, branch_type: str) -> Tuple[Tensor, Tensor]:
     """
     Calculate the branch powers of the given branch type in both the from and to directions.
+
     Parameters
     ----------
     data: HeteroData
