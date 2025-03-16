@@ -20,18 +20,18 @@ class TestPowerFlowMetrics(TestCase):
     def setUpClass(cls):
         """
         Initialize test. Load config and test data.
+
         Returns
         -------
-
         """
         setup_test(cls)
 
     def test_absolute_power_flow_metrics(self):
         """
         Check if the values calculated by the metric classes align with calculating the same values explicitly.
+
         Returns
         -------
-
         """
         mean_apparent_pu_metric = PowerFlowError(
             aggr="mean", power_type="apparent", value_type="absolute", unit="per-unit"
@@ -69,9 +69,9 @@ class TestPowerFlowMetrics(TestCase):
     def test_relative_power_flow_metrics(self):
         """
         Check if the values calculated by the metric classes align with calculating the same values explicitly.
+
         Returns
         -------
-
         """
         mean_apparent_metric = PowerFlowError(aggr="mean", power_type="apparent", value_type="relative").to(self.device)
         max_active_metric = PowerFlowError(aggr="max", power_type="active", value_type="relative").to(self.device)
@@ -109,6 +109,12 @@ class TestPowerFlowMetrics(TestCase):
             powers_imag_abs = powers_pu.imag.abs()
             mask_imag = powers_imag_abs > 0.0
             relative_imag = errors_imag_abs[mask_imag] / powers_imag_abs[mask_imag] * 100
+
+            # TODO
+            # Traceback (most recent call last):
+            #   File "/home/todos/opf-dataset-utils/tests/test_power_flow_metrics.py", line 113, in test_relative_power_flow_metrics
+            #     self.assertAlmostEqual(mean_apparent_metric.compute().cpu().item(), relative_apparent.mean().item())
+            # AssertionError: 0.011659794487059116 != 0.0008623741450719535 within 7 places (0.010797420341987163 difference)
 
             self.assertAlmostEqual(mean_apparent_metric.compute().cpu().item(), relative_apparent.mean().item())
             self.assertAlmostEqual(max_active_metric.compute().cpu().item(), relative_real.max().item())

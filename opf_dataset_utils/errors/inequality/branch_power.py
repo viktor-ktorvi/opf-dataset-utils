@@ -12,6 +12,7 @@ from opf_dataset_utils.utils import get_branch_type_indices
 def calculate_branch_power_errors_from(data: HeteroData, predictions: Dict, branch_type: str) -> Tensor:
     """
     Calculate upper branch power errors for the given branch type.
+
     Parameters
     ----------
     data: HeteroData
@@ -37,6 +38,7 @@ def calculate_branch_power_errors_from(data: HeteroData, predictions: Dict, bran
 def calculate_branch_power_errors_to(data: HeteroData, predictions: Dict, branch_type: str) -> Tensor:
     """
     Calculate lower branch power errors for the given branch type.
+
     Parameters
     ----------
     data: HeteroData

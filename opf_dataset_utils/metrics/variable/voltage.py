@@ -14,9 +14,7 @@ from opf_dataset_utils.metrics.units import AngleUnits, convert_unit
 
 
 class VoltageMagnitudeError(AggregatorMetric):
-    """
-    A metric that measures absolute and relative errors of the bus voltage magnitude predictions.
-    """
+    """A metric that measures absolute and relative errors of the bus voltage magnitude predictions."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False
@@ -47,9 +45,7 @@ class VoltageMagnitudeError(AggregatorMetric):
 
 
 class VoltageAngleError(AggregatorMetric):
-    """
-    A metric that measures absolute and relative errors of the bus voltage angle predictions.
-    """
+    """A metric that measures absolute and relative errors of the bus voltage angle predictions."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False
@@ -86,9 +82,7 @@ class VoltageAngleError(AggregatorMetric):
 
 
 class VoltageMagnitude(AggregatorMetric):
-    """
-    A metric that measures the bus-level voltages in the grid.
-    """
+    """A metric that measures the bus-level voltages in the grid."""
 
     is_differentiable: Optional[bool] = True
     full_state_update: bool = True
@@ -105,9 +99,7 @@ class VoltageMagnitude(AggregatorMetric):
 
 
 class VoltageAngle(AggregatorMetric):
-    """
-    A metric that measures absolute and relative errors of the bus voltage angle predictions.
-    """
+    """A metric that measures absolute and relative errors of the bus voltage angle predictions."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False

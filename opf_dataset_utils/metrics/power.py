@@ -20,6 +20,7 @@ class PowerTypes(StrEnum):
 def calculate_power_type(complex_powers: Tensor, power_type: str) -> Tensor:
     """
     Calculate the specified power type from complex power values.
+
     Parameters
     ----------
     complex_powers: Tensor
@@ -49,9 +50,7 @@ def calculate_power_type(complex_powers: Tensor, power_type: str) -> Tensor:
 
 
 class Power(AggregatorMetric):
-    """
-    A metric that measures the bus-level powers in the grid.
-    """
+    """A metric that measures the bus-level powers in the grid."""
 
     is_differentiable: Optional[bool] = True
     full_state_update: bool = True

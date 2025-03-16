@@ -11,6 +11,7 @@ class ValueTypes(StrEnum):
 def calculate_relative_values(numerator: Tensor, denominator: Tensor, epsilon: float = 0.001) -> Tensor:
     """
     Calculate relative values in percentage points %.
+
     Parameters
     ----------
     numerator: Tensor

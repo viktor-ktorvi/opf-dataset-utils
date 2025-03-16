@@ -7,6 +7,7 @@ from torch import LongTensor
 def edge_index_to_list_of_tuples(edge_index: LongTensor) -> List[Tuple[int]]:
     """
     Turn an edge index into a list of tuples.
+
     Parameters
     ----------
     edge_index: LongTensor
@@ -24,6 +25,7 @@ def edge_index_to_list_of_tuples(edge_index: LongTensor) -> List[Tuple[int]]:
 def display_legend(ax: Axes, **kwargs):
     """
     Display legend. Resize markers so that they fit the legend.
+
     Parameters
     ----------
     ax: Axes
@@ -33,7 +35,6 @@ def display_legend(ax: Axes, **kwargs):
 
     Returns
     -------
-
     """
     legend = ax.legend(**kwargs)
 

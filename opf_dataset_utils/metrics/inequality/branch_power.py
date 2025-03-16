@@ -27,6 +27,7 @@ from opf_dataset_utils.metrics.units import convert_unit
 class BranchPowerInequalityError(AggregatorMetric):
     """
     A metric for branch apparent power inequality errors.
+
     Combines both the AC Line and Transformer branch values, as well as the 'from' and 'to' directions.
     """
 

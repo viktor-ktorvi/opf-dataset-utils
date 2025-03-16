@@ -18,6 +18,7 @@ from opf_dataset_utils.voltage import (
 def calculate_upper_voltage_magnitude_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate upper voltage magnitude errors.
+
     Parameters
     ----------
     data: HeteroData
@@ -39,6 +40,7 @@ def calculate_upper_voltage_magnitude_errors(data: HeteroData, predictions: Dict
 def calculate_lower_voltage_magnitude_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate lower voltage magnitude errors.
+
     Parameters
     ----------
     data: HeteroData
@@ -60,6 +62,7 @@ def calculate_lower_voltage_magnitude_errors(data: HeteroData, predictions: Dict
 def calculate_upper_voltage_angle_difference_errors(data: HeteroData, predictions: Dict, branch_type: str) -> Tensor:
     """
     Calculate upper voltage error difference errors for the given branch type.
+
     Parameters
     ----------
     data: HeteroData
@@ -85,6 +88,7 @@ def calculate_upper_voltage_angle_difference_errors(data: HeteroData, prediction
 def calculate_lower_voltage_angle_difference_errors(data: HeteroData, predictions: Dict, branch_type: str) -> Tensor:
     """
     Calculate lower voltage error difference errors for the given branch type.
+
     Parameters
     ----------
     data: HeteroData

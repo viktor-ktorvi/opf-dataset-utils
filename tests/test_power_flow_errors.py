@@ -25,18 +25,18 @@ class TestPowerFlow(TestCase):
     def setUpClass(cls):
         """
         Initialize test. Load config and test data.
+
         Returns
         -------
-
         """
         setup_test(cls)
 
     def test_absolute_errors_less_than_tolerance(self):
         """
         Check if the maximum module of the complex power flow errors [p.u.] is less than a tolerance.
+
         Returns
         -------
-
         """
 
         for loader in self.loaders:
@@ -48,10 +48,11 @@ class TestPowerFlow(TestCase):
 
     def test_branch_flows_equal_solution(self):
         """
-        Check if the maximum module of the difference between the calculated and solution branch power flows [p.u.] is less than a tolerance.
+        Check if the maximum module of the difference between the calculated and solution branch power flows [p.u.] is
+        less than a tolerance.
+
         Returns
         -------
-
         """
         for loader in self.loaders:
             for batch in loader:

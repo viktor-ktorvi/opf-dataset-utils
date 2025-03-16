@@ -30,9 +30,7 @@ from opf_dataset_utils.metrics.units import convert_unit
 # TODO test
 #  detailed docs
 class VoltageMagnitudeInequalityError(AggregatorMetric):
-    """
-    A metric for voltage magnitude inequality violations.
-    """
+    """A metric for voltage magnitude inequality violations."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False
@@ -79,9 +77,7 @@ class AngleUnits(StrEnum):
 
 
 class VoltageAngleDifferenceInequalityError(AggregatorMetric):
-    """
-    A metric for voltage angle difference inequality violations.
-    """
+    """A metric for voltage angle difference inequality violations."""
 
     is_differentiable: Optional[bool] = True
     higher_is_better: Optional[bool] = False

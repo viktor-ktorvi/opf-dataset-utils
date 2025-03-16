@@ -28,9 +28,9 @@ class Model(torch.nn.Module):
 def main():
     """
     Calculate the power flow errors of the solution and an untrained model.
+
     Returns
     -------
-
     """
     dataset = OPFDataset(
         "data", case_name="pglib_opf_case14_ieee", split="val", topological_perturbations=False, num_groups=1

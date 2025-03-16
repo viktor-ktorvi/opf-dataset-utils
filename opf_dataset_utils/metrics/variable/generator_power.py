@@ -18,9 +18,7 @@ from opf_dataset_utils.metrics.units import convert_unit
 
 
 class GeneratorPowerError(AggregatorMetric):
-    """
-    A metric that measures absolute and relative errors of the generator power predictions.
-    """
+    """A metric that measures absolute and relative errors of the generator power predictions."""
 
     higher_is_better: Optional[bool] = False
     is_differentiable: Optional[bool] = True
@@ -64,9 +62,7 @@ class GeneratorPowerError(AggregatorMetric):
 
 
 class GeneratorPower(AggregatorMetric):
-    """
-    A metric that measures the generator-level powers in the grid.
-    """
+    """A metric that measures the generator-level powers in the grid."""
 
     is_differentiable: Optional[bool] = True
     full_state_update: bool = True

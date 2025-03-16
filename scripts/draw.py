@@ -7,9 +7,9 @@ from opf_dataset_utils.plotting.draw import draw_graph
 def main():
     """
     Draw the graph of a sample from the OPFDataset.
+
     Returns
     -------
-
     """
     dataset = OPFDataset(
         "data", case_name="pglib_opf_case14_ieee", split="val", num_groups=1, topological_perturbations=True

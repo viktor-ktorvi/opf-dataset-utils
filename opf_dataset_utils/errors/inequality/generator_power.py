@@ -17,6 +17,7 @@ from opf_dataset_utils.errors.inequality.violations import (
 def calculate_upper_active_power_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate upper active power errors.
+
     Parameters
     ----------
     data: HeteroData
@@ -38,6 +39,7 @@ def calculate_upper_active_power_errors(data: HeteroData, predictions: Dict) -> 
 def calculate_lower_active_power_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate lower active power errors.
+
     Parameters
     ----------
     data: HeteroData
@@ -59,6 +61,7 @@ def calculate_lower_active_power_errors(data: HeteroData, predictions: Dict) -> 
 def calculate_upper_reactive_power_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate upper reactive power errors.
+
     Parameters
     ----------
     data: HeteroData
@@ -80,6 +83,7 @@ def calculate_upper_reactive_power_errors(data: HeteroData, predictions: Dict) -
 def calculate_lower_reactive_power_errors(data: HeteroData, predictions: Dict) -> Tensor:
     """
     Calculate lower reactive power errors.
+
     Parameters
     ----------
     data: HeteroData
