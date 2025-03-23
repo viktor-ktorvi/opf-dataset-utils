@@ -1,6 +1,7 @@
-from typing import Tuple, Type, Union
+from typing import Type, Union
 
 import torch
+from scipy.sparse import csr_matrix
 from torch import LongTensor, Tensor
 from torch_geometric.data import HeteroData
 
@@ -32,59 +33,6 @@ def aggregate_bus_level(num_buses: int, index: LongTensor, src: Tensor) -> Tenso
     return torch.zeros(num_buses, dtype=src.dtype, device=src.device).scatter_add_(dim=0, index=index, src=src)
 
 
-def calculate_admittances(r: Tensor, x: Tensor) -> Tensor:
-    """
-    Calculate admittances from series parameters.
-
-    Parameters
-    ----------
-    r: Tensor
-        Series resistances.
-    x: Tensor
-        Series reactances.
-
-    Returns
-    -------
-    admittances: Tensor
-        Admittances.
-    """
-    sum_of_squares = r**2 + x**2
-    return r / sum_of_squares - 1j * x / sum_of_squares
-
-
-def extract_branch_admittances(data: HeteroData, branch_type: str) -> Tuple[Tensor, Tensor, Tensor]:
-    """
-    Extract the series and charging admittances.
-
-    Parameters
-    ----------
-    data: HeteroData
-        OPFData.
-    branch_type: str
-        One of ['ac_line', 'transformer'].
-
-    Returns
-    -------
-    Y_ij: Tensor
-        Series admittances.
-    Yc_ij: Tensor
-        Charging admittance in the 'from' direction.
-    Yc_ji
-        Charging admittance in the 'to' direction.
-    """
-    indices = get_branch_type_indices(branch_type)
-
-    Y_ij = calculate_admittances(
-        data.edge_attr_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)][:, indices.SERIES_RESISTANCE],
-        data.edge_attr_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)][:, indices.SERIES_REACTANCE],
-    )
-
-    Yc_ij = 1j * data.edge_attr_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)][:, indices.CHARGING_SUSCEPTANCE_FROM]
-    Yc_ji = 1j * data.edge_attr_dict[(NodeTypes.BUS, branch_type, NodeTypes.BUS)][:, indices.CHARGING_SUSCEPTANCE_TO]
-
-    return Y_ij, Yc_ij, Yc_ji
-
-
 def get_branch_type_indices(branch_type: str) -> Union[Type[GridACLineIndices], Type[GridTransformerIndices]]:
     """
     Return the corresponding enum class for the given branch type.
@@ -111,3 +59,90 @@ def get_branch_type_indices(branch_type: str) -> Union[Type[GridACLineIndices], 
         raise ValueError(
             f"Branch type '{branch_type}' is not supported. Expected one of ['{EdgeTypes.AC_LINE}', '{EdgeTypes.TRANSFORMER}']"
         )
+
+
+def get_tap_ratios(data: HeteroData, branch_type: str) -> Tensor:
+    """
+    Get the tap ratios of lines.
+
+    Parameters
+    ----------
+    data: HeteroData
+        OPF data.
+    branch_type: str
+        Branch type.
+
+    Returns
+    -------
+    T_ij: Tensor
+        Complex tap ratio.
+
+    Raises
+    ------
+    ValueError
+        If the branch_type is not supported.
+    """
+    if branch_type == EdgeTypes.TRANSFORMER:
+        Tm_ij = data.edge_attr_dict[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)][
+            :, GridTransformerIndices.TAP_MAGNITUDE
+        ]
+        T_phase = data.edge_attr_dict[(NodeTypes.BUS, EdgeTypes.TRANSFORMER, NodeTypes.BUS)][
+            :, GridTransformerIndices.TAP_PHASE_SHIFT
+        ]
+        T_ij = Tm_ij * torch.exp(1j * T_phase)
+
+        return T_ij
+
+    if branch_type == EdgeTypes.AC_LINE:
+        edge_index = data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.AC_LINE, NodeTypes.BUS)]
+        T_ij = torch.ones(edge_index.shape[1], dtype=torch.tensor(1j).dtype, device=edge_index.device)
+
+        return T_ij
+
+    raise ValueError(
+        f"Branch type '{branch_type}' is not supported. Expected one of ['{EdgeTypes.AC_LINE}', '{EdgeTypes.TRANSFORMER}']"
+    )
+
+
+def csr_to_sparse_tensor(csr: csr_matrix, dtype: torch.dtype, size: tuple[int, ...]) -> Tensor:
+    """
+    Convert a scipy csr matrix to a torch csr tensor.
+
+    Parameters
+    ----------
+    csr: csr_matrix
+        csr matrix.
+    dtype: torch.dtype
+        Data type.
+    size: tuple[int, ...]
+        Size.
+
+    Returns
+    -------
+    sparse_csr_tensor: Tensor
+        Sparse csr tensor.
+    """
+    return torch.sparse_csr_tensor(
+        crow_indices=torch.LongTensor(csr.indptr),
+        col_indices=torch.LongTensor(csr.indices),
+        values=torch.tensor(csr.data),
+        dtype=dtype,
+        size=size,
+    )
+
+
+def to_sparse_diag(tensor: Tensor):
+    """
+    Transform a 1D tensor into a sparse diagonal tensor.
+
+    Parameters
+    ----------
+    tensor: Tensor
+        1D tensor.
+
+    Returns
+    -------
+    sparse_diag_tensor: Tensor
+        A sparse diagonal tensor.
+    """
+    return torch.sparse.spdiags(tensor, torch.tensor(0), (len(tensor), len(tensor)), layout=torch.sparse_csr)

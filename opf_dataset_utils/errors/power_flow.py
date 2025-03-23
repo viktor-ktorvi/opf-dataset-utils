@@ -4,12 +4,8 @@ import torch
 from torch import Tensor
 from torch_geometric.data import HeteroData
 
-from opf_dataset_utils.enumerations import (
-    EdgeIndexIndices,
-    EdgeTypes,
-    GridShuntIndices,
-    NodeTypes,
-)
+from opf_dataset_utils.admittance import get_bus_shunt_admittance
+from opf_dataset_utils.enumerations import EdgeIndexIndices, EdgeTypes, NodeTypes
 from opf_dataset_utils.power import calculate_branch_powers, calculate_bus_powers
 from opf_dataset_utils.utils import aggregate_bus_level
 from opf_dataset_utils.voltage import get_voltages_magnitudes
@@ -36,16 +32,7 @@ def calculate_power_flow_errors(data: HeteroData, predictions: Dict) -> Tensor:
     # generator, load and shunt power at the bus
     S_bus = calculate_bus_powers(data, predictions)
 
-    Ysh = (
-        data.x_dict[NodeTypes.SHUNT][:, GridShuntIndices.CONDUCTANCE]
-        + 1j * data.x_dict[NodeTypes.SHUNT][:, GridShuntIndices.SUSCEPTANCE]
-    )
-
-    Ysh_bus = aggregate_bus_level(
-        num_buses,
-        index=data.edge_index_dict[(NodeTypes.BUS, EdgeTypes.SHUNT_LINK, NodeTypes.SHUNT)][EdgeIndexIndices.FROM],
-        src=Ysh,
-    )
+    Ysh_bus = get_bus_shunt_admittance(data)
 
     Vm = get_voltages_magnitudes(predictions)
     Ssh_bus = torch.conj(Ysh_bus) * Vm**2
