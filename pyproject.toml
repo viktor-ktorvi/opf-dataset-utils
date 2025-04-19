@@ -12,6 +12,7 @@ matplotlib = "^3.9.0"
 numpy = "1.26.0"
 pydot = "^3.0.2"
 torchmetrics = "1.5.0"
+pymetis = "^2023.1.1"
 [tool.poetry.group.dev]
 optional = true
 

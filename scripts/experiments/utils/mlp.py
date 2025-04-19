@@ -5,9 +5,7 @@ from torch_geometric.nn import MLP
 
 
 class HeteroMLP(nn.Module):
-    """
-    An MLP that takes in heterogeneous data in the for of a dictionary.
-    """
+    """An MLP that takes in heterogeneous data in the for of a dictionary."""
 
     def __init__(
         self, in_channels: dict[Any, int], out_channels: dict[Any, int], hidden_channels: int, num_layers: int

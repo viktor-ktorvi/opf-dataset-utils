@@ -274,13 +274,11 @@ class ModelModule(LightningModule):
     """
     An example (lightning) model for the OPFDataset.
 
-    Processes the heterogeneous data by normalizing the inputs for each node type,
-    projecting the features to a hidden dimension using an MLP,
-    processing the data with a GNN, projects the outputs down to the target dimensions,
-    and inverse normalizes the outputs.
+    Processes the heterogeneous data by normalizing the inputs for each node type, projecting the features to a hidden
+    dimension using an MLP, processing the data with a GNN, projects the outputs down to the target dimensions, and
+    inverse normalizes the outputs.
 
-    Calculates and logs metrics like R2 score and MSE, as well as OPF specific metrics
-    like absolute power flow error.
+    Calculates and logs metrics like R2 score and MSE, as well as OPF specific metrics like absolute power flow error.
 
     Includes the absolute power flow error as a penalty in the loss.
     """
@@ -390,6 +388,7 @@ class ModelModule(LightningModule):
 def main(cfg: DictConfig):
     """
     Train a GNN on the OPFDataset.
+
     Parameters
     ----------
     cfg: DictConfig
@@ -397,7 +396,6 @@ def main(cfg: DictConfig):
 
     Returns
     -------
-
     """
     warnings.filterwarnings("ignore", message="The total number of parameters detected may be inaccurate")
     warnings.filterwarnings("ignore", message="There is a wandb run already in progress")

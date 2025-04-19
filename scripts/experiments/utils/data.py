@@ -5,9 +5,7 @@ from opf_dataset_utils import DATA_DIR
 
 
 class OPFDataModule(LightningDataset):
-    """
-    Lightning data module for the OPFDataset.
-    """
+    """Lightning data module for the OPFDataset."""
 
     batch_size: int
     dataset_train: OPFDataset
