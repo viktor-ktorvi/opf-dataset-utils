@@ -13,10 +13,6 @@ numpy = "1.26.0"
 pydot = "^3.0.2"
 torchmetrics = "1.5.0"
 pymetis = "^2023.1.1"
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
 torch = { version = "^2.3.1+cu121", source = "torch_cuda121" }
 torchvision = { version = "^0.18.1+cu121", source = "torch_cuda121" }
 torchaudio = { version = "^2.3.1+cu121", source = "torch_cuda121" }
@@ -40,6 +36,12 @@ docformatter = {extras = ["tomli"], version = "^1.7.5"}
 
 lightning = "^2.4.0"
 wandb = "^0.18.5"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+
 [tool.poetry.group.lab]
 optional = true
 
