@@ -316,7 +316,9 @@ class ModelModule(LightningModule):
         return predictions_dict, loss
 
     def _shared_step(self, batch, split: str):
-        logging_kwargs = dict(on_step=True, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.batch_size)
+        logging_kwargs = dict(
+            on_step=True, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.batch_size, sync_dist=True
+        )
 
         # predict
         pred_dict, supervised_loss = self(batch)
@@ -425,9 +427,10 @@ def main(cfg: DictConfig):
 
     learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
 
-    # TODO support multiple GPUs
     trainer = Trainer(
+        devices=-1,
         deterministic=True,
+        strategy="ddp_find_unused_parameters_true",
         accelerator=cfg.training.accelerator,
         max_epochs=cfg.training.epochs,
         gradient_clip_val=cfg.training.gradient_clip_val,
