@@ -1,5 +1,6 @@
 import warnings
 from enum import StrEnum
+from typing import Any
 
 import hydra
 import torch
@@ -282,9 +283,10 @@ class ModelModule(LightningModule):
     Includes the absolute power flow error as a penalty in the loss.
     """
 
-    learning_rate: float
+    cfg: DictConfig
 
     def __init__(self, data_module: OPFDataModule, cfg: DictConfig):
+        self.cfg = cfg
         super().__init__()
         self.learning_rate = cfg.training.learning_rate
         self.power_flow_multiplier = cfg.training.power_flow_multiplier
@@ -348,22 +350,36 @@ class ModelModule(LightningModule):
     def test_step(self, batch, batch_idx):
         self._shared_step(batch, Split.TEST)
 
-    # TODO disable scheduler
-    def configure_optimizers(self) -> dict:
+    def configure_optimizers(self) -> Any:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer=optimizer, factor=0.5, patience=15, threshold=0.05, threshold_mode="rel", min_lr=1e-5
-                ),
-                "interval": "epoch",
-                "frequency": 1,
-                "monitor": "val/supervised loss",
-                "strict": True,
-                "name": None,
-            },
-        }
+
+        if self.cfg.training.scheduler.name == "none":
+            return optimizer
+
+        if self.cfg.training.scheduler.name == "plateau":
+            scheduler = ReduceLROnPlateau(
+                optimizer=optimizer,
+                factor=self.cfg.training.scheduler.factor,
+                patience=self.cfg.training.scheduler.patience,
+                threshold=self.cfg.training.scheduler.threshold,
+                threshold_mode="rel",
+                min_lr=self.cfg.training.scheduler.min_lr,
+            )
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {
+                    "scheduler": scheduler,
+                    "interval": "epoch",
+                    "frequency": 1,
+                    "monitor": "val/supervised loss",
+                    "strict": True,
+                    "name": None,
+                },
+            }
+
+        raise ValueError(
+            f"Scheduler '{self.cfg.training.scheduler.name}' is currently not supported. Expected one of ['none', 'plateau']"
+        )
 
 
 @hydra.main(version_base=None, config_path=str(CONFIG_PATH), config_name="experiments")
@@ -409,6 +425,7 @@ def main(cfg: DictConfig):
 
     learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
 
+    # TODO support multiple GPUs
     trainer = Trainer(
         deterministic=True,
         accelerator=cfg.training.accelerator,

@@ -50,4 +50,4 @@ def get_gnn(cfg: DictConfig) -> nn.Module:
             jk=cfg.training.jumping_knowledge,
         )
 
-    raise ValueError(f"GNN {cfg.training.gnn} is currently not supported. Expected one of ['gat', 'sage', 'gin']")
+    raise ValueError(f"GNN '{cfg.training.gnn}' is currently not supported. Expected one of ['gat', 'sage', 'gin']")
