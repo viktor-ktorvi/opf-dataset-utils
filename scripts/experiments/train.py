@@ -348,6 +348,7 @@ class ModelModule(LightningModule):
     def test_step(self, batch, batch_idx):
         self._shared_step(batch, Split.TEST)
 
+    # TODO disable scheduler
     def configure_optimizers(self) -> dict:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return {

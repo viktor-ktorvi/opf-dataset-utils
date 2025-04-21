@@ -17,7 +17,7 @@ def get_gnn(cfg: DictConfig) -> nn.Module:
     gnn: nn.Module
     """
     if cfg.training.gnn == "gat":
-        GAT(
+        return GAT(
             in_channels=cfg.training.hidden_channels,
             edge_dim=-1,
             hidden_channels=cfg.training.hidden_channels,
