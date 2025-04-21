@@ -89,9 +89,9 @@ class ClusterVirtualNodes(BaseTransform):
         virtual_to_bus = torch.concatenate(virtual_to_bus, dim=1)
         bus_to_virtual = torch.concatenate(bus_to_virtual, dim=1)
 
-        data[Virtual.NODE].x = virtual_x
-        data[Virtual.NODE, Virtual.EDGE, NodeTypes.BUS].edge_index = virtual_to_bus
-        data[NodeTypes.BUS, Virtual.EDGE, Virtual.NODE].edge_index = bus_to_virtual
+        data[Virtual.NODE.value].x = virtual_x
+        data[Virtual.NODE.value, Virtual.EDGE.value, NodeTypes.BUS.value].edge_index = virtual_to_bus
+        data[NodeTypes.BUS.value, Virtual.EDGE.value, Virtual.NODE.value].edge_index = bus_to_virtual
 
         return data
 
@@ -133,23 +133,6 @@ def main(cfg: DictConfig):
     ax.set_title("Power grid graph")
     ax.axis("off")  # remove border
     ax.set_aspect("auto")
-
-    virtual_x = torch.zeros((num_clusters, 1))
-
-    virtual_to_bus = []
-    bus_to_virtual = []
-    for cluster_id in range(num_clusters):
-        cluster_members = torch.argwhere(torch.tensor(membership) == cluster_id).T
-        virtual_node = torch.ones_like(cluster_members) * cluster_id
-        virtual_to_bus.append(torch.concatenate((virtual_node, cluster_members), dim=0))
-        bus_to_virtual.append(torch.concatenate((cluster_members, virtual_node), dim=0))
-
-    virtual_to_bus = torch.concatenate(virtual_to_bus, dim=1)
-    bus_to_virtual = torch.concatenate(bus_to_virtual, dim=1)
-
-    data.x_dict[Virtual.NODE] = virtual_x
-    data.edge_index_dict[Virtual.NODE, Virtual.EDGE, NodeTypes.BUS] = virtual_to_bus
-    data.edge_index_dict[NodeTypes.BUS, Virtual.EDGE, Virtual.NODE] = bus_to_virtual
 
     # transform = ClusterVirtualNodes(num_clusters=2)
     # transformed_data = transform(dataset[1])

@@ -415,13 +415,7 @@ def main(cfg: DictConfig):
     torch.multiprocessing.set_sharing_strategy("file_system")
     seed_everything(cfg.random_seed, workers=True)
 
-    opf_data = OPFDataModule(
-        case_name=cfg.data.case_name,
-        topological_perturbations=cfg.data.topological_perturbations,
-        num_groups=cfg.data.num_groups,
-        batch_size=cfg.training.batch_size,
-        num_workers=cfg.num_workers,
-    )
+    opf_data = OPFDataModule(cfg)
 
     model = ModelModule(opf_data, cfg)
 
@@ -438,6 +432,7 @@ def main(cfg: DictConfig):
         callbacks=[learning_rate_monitor],
     )
 
+    # TODO where are the test metrics? don't forget to turn them on when getting final results
     trainer.fit(model, opf_data)
 
 

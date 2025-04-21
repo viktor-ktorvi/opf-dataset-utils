@@ -1,5 +1,7 @@
 case_name: pglib_opf_case14_ieee
 
+force_reload: False
+
 num_groups: 1
 
 topological_perturbations: True
