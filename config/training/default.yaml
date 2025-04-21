@@ -2,7 +2,11 @@ accelerator: gpu
 
 batch_size: 128
 
-epochs: 100
+dropout: 0.0
+
+epochs: 10
+
+gnn: sage
 
 gradient_clip_val: 1.0
 
@@ -10,12 +14,18 @@ heads: 32
 
 hidden_channels: 128
 
+jumping_knowledge: "cat"
+
 learning_rate: 3.0e-4
 
-num_layers: 6
+num_layers: 4
 
-num_mlp_layers: 0
+num_mlp_layers: 1
 
 power_flow_multiplier: 1.0e-5 # 1.0 works well when power is in per-unit
 
 probabilistic: False
+
+use_input_standard_scaler: True
+
+use_output_standard_scaler: True

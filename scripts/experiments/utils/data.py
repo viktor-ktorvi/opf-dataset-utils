@@ -21,6 +21,8 @@ class OPFDataModule(LightningDataset):
         num_workers: int = 1,
     ):
         # TODO Do we wanna transform the data - e.g., some edges are (I think) directed, and maybe we wanna change that.
+
+        # TODO also optionally add virtual nodes
         dataset_train = OPFDataset(
             DATA_DIR,
             case_name=case_name,

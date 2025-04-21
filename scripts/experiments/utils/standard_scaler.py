@@ -12,8 +12,9 @@ class StandardScaler(nn.Module):
 
     mean: Tensor
     std: Tensor
+    disabled: bool
 
-    def __init__(self, inverse: bool = False):
+    def __init__(self, inverse: bool = False, disabled: bool = False):
         super().__init__()
 
         self.value_sum = None
@@ -22,7 +23,15 @@ class StandardScaler(nn.Module):
 
         self.inverse = inverse
 
+        self.disabled = disabled
+        if self.disabled:
+            self.register_buffer("mean", torch.tensor(0.0))
+            self.register_buffer("std", torch.tensor(1.0))
+
     def update(self, batch: Tensor):
+        if self.disabled:
+            return
+
         size = batch.shape[-1]
         if self.value_sum is None:
             self.value_sum = torch.zeros((size,))
@@ -34,6 +43,9 @@ class StandardScaler(nn.Module):
         self.square_sum += (batch**2).sum(dim=0)
 
     def calculate_statistics(self):
+        if self.disabled:
+            return
+
         mean = self.value_sum / self.num_samples
 
         std = torch.sqrt(self.square_sum / self.num_samples - mean**2)
@@ -59,16 +71,19 @@ class StandardScaler(nn.Module):
 class HeteroStandardScaler(nn.Module):
     """A tensor standard scaler for hetero data."""
 
-    def __init__(self, inverse: bool = False):
+    disabled: bool
+
+    def __init__(self, inverse: bool = False, disabled: bool = False):
         super().__init__()
         self.inverse = inverse
         self.scalers = None
+        self.disabled = disabled
 
     def update(self, batch_dict: dict[str, Tensor]):
         if self.scalers is None:
             scalers = {}
             for node_type in batch_dict:
-                scalers[node_type] = StandardScaler(inverse=self.inverse)
+                scalers[node_type] = StandardScaler(inverse=self.inverse, disabled=self.disabled)
 
             self.scalers = nn.ModuleDict(scalers)
         for node_type in self.scalers:

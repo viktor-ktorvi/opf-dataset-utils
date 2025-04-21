@@ -10,7 +10,7 @@ from pytorch_lightning.loggers import WandbLogger
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch_geometric.data import HeteroData
-from torch_geometric.nn import GAT, to_hetero
+from torch_geometric.nn import to_hetero
 from torch_geometric.utils import to_undirected
 from torchmetrics import MetricCollection, R2Score
 
@@ -41,6 +41,7 @@ from opf_dataset_utils.metrics.variable.voltage import (
     VoltageMagnitudeError,
 )
 from scripts.experiments.utils.data import OPFDataModule
+from scripts.experiments.utils.gnn import get_gnn
 from scripts.experiments.utils.mlp import HeteroMLP
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
 
@@ -152,26 +153,20 @@ class GaussianNegativeLogLikelihood(nn.Module):
     """Negative log-likelihood of the Gaussian distribution."""
 
     def forward(self, target: Tensor, mean: Tensor, std: Tensor):
-        # std = std + 0.01
         neg_log_likelihood = torch.log(std) + (target - mean) ** 2 / 2 / std**2
 
         return torch.sum(neg_log_likelihood)
 
 
 class Model(nn.Module):
-    def __init__(
-        self,
-        data_module: OPFDataModule,
-        hidden_channels: int,
-        num_layers: int,
-        num_mlp_layers: int,
-        heads: int,
-        probabilistic: bool,
-    ):
+    def __init__(self, data_module: OPFDataModule, cfg: DictConfig):
         super().__init__()
 
-        self.probabilistic = probabilistic
-        if probabilistic:
+        hidden_channels = cfg.training.hidden_channels
+        num_mlp_layers = cfg.training.num_mlp_layers
+
+        self.probabilistic = cfg.training.probabilistic
+        if self.probabilistic:
             self.criterion = GaussianNegativeLogLikelihood()
         else:
             self.criterion = nn.MSELoss()
@@ -179,11 +174,20 @@ class Model(nn.Module):
         # init modules
         example_batch = next(iter(data_module.train_dataloader()))
 
-        self.in_scaler = HeteroStandardScaler()
-        self.out_scaler = HeteroStandardScaler(inverse=True)
+        # TODO separate options for input and output scalers
+
+        input_scaler_disabled = not cfg.training.use_input_standard_scaler
+        output_scaler_disabled = not cfg.training.use_output_standard_scaler
+
+        self.in_scaler = HeteroStandardScaler(disabled=input_scaler_disabled)
+        self.out_scaler = HeteroStandardScaler(inverse=True, disabled=output_scaler_disabled)
         for batch in data_module.train_dataloader():
             self.in_scaler.update(batch.x_dict)
             self.out_scaler.update(batch.y_dict)
+
+            if input_scaler_disabled and output_scaler_disabled:
+                break
+
         self.in_scaler.calculate_statistics()
         self.out_scaler.calculate_statistics()
 
@@ -191,23 +195,10 @@ class Model(nn.Module):
             in_channels=example_batch.num_node_features,
             out_channels={key: hidden_channels for key in example_batch.x_dict},
             hidden_channels=hidden_channels,
-            num_layers=num_mlp_layers,
+            num_layers=cfg.training.num_mlp_layers,
         )
 
-        self.gnn = to_hetero(
-            GAT(
-                in_channels=hidden_channels,
-                edge_dim=-1,
-                hidden_channels=hidden_channels,
-                num_layers=num_layers,
-                out_channels=hidden_channels,
-                add_self_loops=False,
-                jk="cat",
-                v2=True,
-                heads=heads,
-            ),
-            example_batch.metadata(),
-        )
+        self.gnn = to_hetero(get_gnn(cfg), example_batch.metadata())
 
         self.out_mlp = HeteroMLP(
             in_channels={key: hidden_channels for key in example_batch.y_dict},
@@ -216,13 +207,21 @@ class Model(nn.Module):
             num_layers=num_mlp_layers,
         )
 
-        if probabilistic:
+        if self.probabilistic:
             self.out_mlp_std = HeteroMLP(
                 in_channels={key: hidden_channels for key in example_batch.y_dict},
                 out_channels={key: y.shape[-1] for key, y in example_batch.y_dict.items()},
                 hidden_channels=hidden_channels,
                 num_layers=num_mlp_layers,
             )
+
+        # TODO would be nice to slap on shifted and scaled sigmoids to the outputs (optionally)
+
+        # TODO list of tricks
+        #  scaling inputs and outputs
+        #  adding physics based terms in the loss
+        #  long range dependency consideration
+        #  adding sigmoids to handle constraints (if it helps)
 
         # initialize lazy modules (edge_dim in the GNN)
         with torch.no_grad():
@@ -285,30 +284,12 @@ class ModelModule(LightningModule):
 
     learning_rate: float
 
-    def __init__(
-        self,
-        data_module: OPFDataModule,
-        hidden_channels: int,
-        num_layers: int,
-        num_mlp_layers: int,
-        learning_rate: float,
-        power_flow_multiplier: float,
-        heads: int,
-        probabilistic: bool,
-    ):
+    def __init__(self, data_module: OPFDataModule, cfg: DictConfig):
         super().__init__()
+        self.learning_rate = cfg.training.learning_rate
+        self.power_flow_multiplier = cfg.training.power_flow_multiplier
 
-        self.learning_rate = learning_rate
-        self.power_flow_multiplier = power_flow_multiplier
-
-        self.model = Model(
-            data_module=data_module,
-            hidden_channels=hidden_channels,
-            num_layers=num_layers,
-            num_mlp_layers=num_mlp_layers,
-            heads=heads,
-            probabilistic=probabilistic,
-        )
+        self.model = Model(data_module=data_module, cfg=cfg)
 
         example_batch = next(iter(data_module.train_dataloader()))
 
@@ -423,16 +404,7 @@ def main(cfg: DictConfig):
         num_workers=cfg.num_workers,
     )
 
-    model = ModelModule(
-        opf_data,
-        hidden_channels=cfg.training.hidden_channels,
-        num_layers=cfg.training.num_layers,
-        num_mlp_layers=cfg.training.num_mlp_layers,
-        learning_rate=cfg.training.learning_rate,
-        power_flow_multiplier=cfg.training.power_flow_multiplier,
-        heads=cfg.training.heads,
-        probabilistic=cfg.training.probabilistic,
-    )
+    model = ModelModule(opf_data, cfg)
 
     learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
 
