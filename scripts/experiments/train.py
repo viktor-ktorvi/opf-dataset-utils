@@ -17,7 +17,14 @@ from torchmetrics import MetricCollection, R2Score
 
 import wandb
 from opf_dataset_utils import CONFIG_PATH
-from opf_dataset_utils.enumerations import EdgeTypes, NodeTypes
+from opf_dataset_utils.enumerations import (
+    EdgeTypes,
+    GridBusIndices,
+    GridGeneratorIndices,
+    NodeTypes,
+    SolutionBusIndices,
+    SolutionGeneratorIndices,
+)
 from opf_dataset_utils.metrics.aggregation import AggregationTypes
 from opf_dataset_utils.metrics.cost import OptimalityGap
 from opf_dataset_utils.metrics.inequality.bound_types import BoundTypes
@@ -44,6 +51,7 @@ from opf_dataset_utils.metrics.variable.voltage import (
 from scripts.experiments.utils.data import OPFDataModule
 from scripts.experiments.utils.gnn import get_gnn
 from scripts.experiments.utils.mlp import HeteroMLP
+from scripts.experiments.utils.scale_and_shift import scale_and_shift
 from scripts.experiments.utils.standard_scaler import HeteroStandardScaler
 
 
@@ -163,6 +171,8 @@ class Model(nn.Module):
     def __init__(self, data_module: OPFDataModule, cfg: DictConfig):
         super().__init__()
 
+        self.cfg = cfg
+
         hidden_channels = cfg.training.hidden_channels
         num_mlp_layers = cfg.training.num_mlp_layers
 
@@ -253,6 +263,25 @@ class Model(nn.Module):
         y_dict = batch.y_dict
         pred_dict_scaled = self.out_scaler.scale(pred_dict)
         y_dict_scaled = self.out_scaler.scale(y_dict)
+
+        if self.cfg.training.use_sigmoid_scale_and_shift:
+            pred_dict_scaled[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE] = scale_and_shift(
+                pred_dict_scaled[NodeTypes.BUS][:, SolutionBusIndices.VOLTAGE_MAGNITUDE],
+                x_dict[NodeTypes.BUS][:, GridBusIndices.VOLTAGE_MIN],
+                x_dict[NodeTypes.BUS][:, GridBusIndices.VOLTAGE_MAX],
+            )
+
+            pred_dict_scaled[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER] = scale_and_shift(
+                pred_dict_scaled[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.ACTIVE_POWER],
+                x_dict[NodeTypes.GENERATOR][:, GridGeneratorIndices.ACTIVE_POWER_MIN],
+                x_dict[NodeTypes.GENERATOR][:, GridGeneratorIndices.ACTIVE_POWER_MAX],
+            )
+
+            pred_dict_scaled[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER] = scale_and_shift(
+                pred_dict_scaled[NodeTypes.GENERATOR][:, SolutionGeneratorIndices.REACTIVE_POWER],
+                x_dict[NodeTypes.GENERATOR][:, GridGeneratorIndices.REACTIVE_POWER_MIN],
+                x_dict[NodeTypes.GENERATOR][:, GridGeneratorIndices.REACTIVE_POWER_MAX],
+            )
 
         if not self.probabilistic:
             loss = torch.stack([self.criterion(pred_dict_scaled[key], y_dict_scaled[key]) for key in y_dict]).sum()

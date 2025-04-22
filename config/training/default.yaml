@@ -32,6 +32,8 @@ use_input_standard_scaler: True
 
 use_output_standard_scaler: True
 
+use_sigmoid_scale_and_shift: False
+
 defaults:
   - scheduler: none
   - _self_ # https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order/
