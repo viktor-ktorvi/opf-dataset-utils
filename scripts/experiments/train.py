@@ -420,11 +420,13 @@ def main(cfg: DictConfig):
     model = ModelModule(opf_data, cfg)
 
     learning_rate_monitor = LearningRateMonitor(logging_interval="epoch")
-
+    # TODO distributed training fails for some reason
+    #  RuntimeError: Modules with uninitialized parameters can't be used with `DistributedDataParallel`.
+    #  Run a dummy forward pass to correctly initialize the modules
     trainer = Trainer(
-        devices=-1,
+        # devices=-1,
+        # strategy="ddp_find_unused_parameters_true",
         deterministic=True,
-        strategy="ddp_find_unused_parameters_true",
         accelerator=cfg.training.accelerator,
         max_epochs=cfg.training.epochs,
         gradient_clip_val=cfg.training.gradient_clip_val,
